@@ -1,6 +1,5 @@
+import streamlit as st
 from service import Service
-
-
 class UI:
     @staticmethod
     def main():
@@ -51,5 +50,27 @@ class UI:
         id = int(input("Informe o id do cliente a ser excluído: "))
         Service.cliente_excluir(id)
 
+    @staticmethod
+    def cadastrar_cliente():
+        st.header("Cadastro de Cliente")
 
-UI.main()
+        id = st.number_input("Informe o id: ")
+        nome = st.text_input("Informe o nome: ")
+        email = st.text_input("Informe o e-mail: ")
+        fone = st.text_input("Informe o telefone: ")
+
+        if st.button("Cadastrar"):
+            Service.cliente_inserir(id, nome, email, fone)
+            st.write(f"Cliente cadastrado: {nome}")
+            st.success("Cliente cadastrado com sucesso!")
+
+    @staticmethod
+    def menu_streamlit():
+        st.title("Cadastro de Clientes")
+
+        opcao = st.selectbox("Menu", ["Cadastrar cliente", "Sair"], key="menu_opcao")
+
+        if opcao == "Cadastrar cliente":
+            UI.cadastrar_cliente()
+
+
