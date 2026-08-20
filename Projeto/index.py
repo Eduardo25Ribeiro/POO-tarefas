@@ -1,4 +1,6 @@
-import streamlit as st
-from ui import UI 
+from templates.manterclienteui import ManterClienteUI
 
-UI.menu_streamlit()  
+class IndexUI:
+    def main():
+        ManterClienteUI.main()
+IndexUI.main()
