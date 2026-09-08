@@ -1,12 +1,12 @@
 from datetime import datetime
 
 
-class Horario:
+class Profissional:
     def __init__(self, id, data, confirmado, id_cliente, id_servico):
         self.set_id(id)
         self.set_data(data)
         self.set_confirmado(confirmado)
-        self.set_id_horario(id_cliente)
+        self.set_id_profissional(id_cliente)
         self.set_id_servico(id_servico)
 
     def set_id(self, id):
@@ -30,12 +30,12 @@ class Horario:
             raise TypeError("Confirmado deve ser True ou False")
         self.__confirmado = confirmado
 
-    def set_id_horario(self, id_horario):
-        if not isinstance(id_horario, int):
+    def set_id_profissional(self, id_cliente):
+        if not isinstance(id_cliente, int):
             raise TypeError("Id do cliente deve ser um número inteiro")
-        if id_horario < 0:
+        if id_cliente < 0:
             raise ValueError("Id do cliente deve ser positivo")
-        self.__id_horario = id_horario
+        self.__id_cliente = id_cliente
 
     def set_id_servico(self, id_servico):
         if not isinstance(id_servico, int):
@@ -53,8 +53,8 @@ class Horario:
     def get_confirmado(self):
         return self.__confirmado
 
-    def get_id_horario(self):
-        return self.__id_horario
+    def get_id_profissional(self):
+        return self.__id_cliente
 
     def get_id_servico(self):
         return self.__id_servico
@@ -64,13 +64,13 @@ class Horario:
             "id": self.__id,
             "data": self.__data.strftime("%d/%m/%Y %H:%M"),
             "confirmado": self.__confirmado,
-            "id_cliente": self.__id_horario,
+            "id_cliente": self.__id_cliente,
             "id_servico": self.__id_servico,
         }
 
     @staticmethod
     def from_json(dic):
-        return Horario(
+        return Profissional(
             dic["id"],
             dic["data"],
             dic["confirmado"],

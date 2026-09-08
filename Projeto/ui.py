@@ -1,5 +1,6 @@
 import streamlit as st
 from service import Service
+
 class UI:
     @staticmethod
     def main():
@@ -14,10 +15,18 @@ class UI:
                 UI.cliente_atualizar()
             elif op == 4:
                 UI.cliente_excluir()
+            elif op == 5:
+                UI.profissional_inserir()
+            elif op == 6:
+                UI.profissional_listar()
+            elif op == 7:
+                UI.profissional_atualizar()
+            elif op == 8:
+                UI.profissional_excluir()
 
     @staticmethod
     def menu():
-        print("1-Inserir, 2-Listar, 3-Atualizar, 4-Excluir, 9-Fim")
+        print("1-Inserir cliente, 2-Listar cliente, 3-Atualizar cliente, 4-Excluir cliente, 5-Inserir profissional, 6-Listar profissional, 7-Atualizar profissional, 8-Excluir profissional, 9-Fim")
         return int(input("Informe uma opção: "))
 
     @staticmethod
@@ -51,6 +60,36 @@ class UI:
         Service.cliente_excluir(id)
 
     @staticmethod
+    def profissional_inserir():
+        id = int(input("Informe o id: "))
+        nome = input("Informe o nome: ")
+        email = input("Informe o e-mail: ")
+        especialidade = input("Informe a especialidade: ")
+        Service.profissional_inserir(id, nome, email, especialidade)
+
+    @staticmethod
+    def profissional_listar():
+        for obj in Service.profissional_listar():
+            print(obj)
+
+    @staticmethod
+    def profissional_atualizar():
+        for obj in Service.profissional_listar():
+            print(obj)
+        id = int(input("Informe o id do profissional a ser atualizado: "))
+        nome = input("Informe o novo nome: ")
+        email = input("Informe o novo e-mail: ")
+        especialidade = input("Informe a nova especialidade: ")
+        Service.profissional_atualizar(id, nome, email, especialidade)
+
+    @staticmethod
+    def profissional_excluir():
+        for obj in Service.profissional_listar():
+            print(obj)
+        id = int(input("Informe o id do profissional a ser excluído: "))
+        Service.profissional_excluir(id)
+
+    @staticmethod
     def cadastrar_cliente():
         st.header("Cadastro de Cliente")
 
@@ -72,5 +111,3 @@ class UI:
 
         if opcao == "Cadastrar cliente":
             UI.cadastrar_cliente()
-
-

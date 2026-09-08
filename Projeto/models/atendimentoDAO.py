@@ -1,9 +1,9 @@
 import json
-from models.horario import Horario
+from models.atendimento import Atendimento
 
 
 
-class HorarioDAO:
+class AtendimentoDAO:
     def __init__(self):
         self.__arquivo = "servicos.json"
         self.__objetos = []
@@ -39,7 +39,7 @@ class HorarioDAO:
         try:
             with open(self.__arquivo, mode="r") as arquivo:
                 list_dic = json.load(arquivo)
-                self.__objetos = [Horario.from_json(dic) for dic in list_dic]
+                self.__objetos = [Atendimento.from_json(dic) for dic in list_dic]
         except FileNotFoundError:
             self.__objetos = []
 
