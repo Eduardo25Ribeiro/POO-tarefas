@@ -35,7 +35,8 @@ class UI:
         nome = input("Informe o nome: ")
         email = input("Informe o e-mail: ")
         fone = input("Informe o telefone: ")
-        Service.cliente_inserir(id, nome, email, fone)
+        id_convenio = int(input("Informe o id do convênio: "))
+        Service.cliente_inserir(id, nome, email, fone, id_convenio)
 
     @staticmethod
     def cliente_listar():
@@ -50,7 +51,8 @@ class UI:
         nome = input("Informe o novo nome: ")
         email = input("Informe o novo e-mail: ")
         fone = input("Informe o novo telefone: ")
-        Service.cliente_atualizar(id, nome, email, fone)
+        id_convenio = int(input("Informe o novo id do convênio: "))
+        Service.cliente_atualizar(id, nome, email, fone, id_convenio)
 
     @staticmethod
     def cliente_excluir():
@@ -97,9 +99,10 @@ class UI:
         nome = st.text_input("Informe o nome: ")
         email = st.text_input("Informe o e-mail: ")
         fone = st.text_input("Informe o telefone: ")
+        id_convenio = st.number_input("Informe o id do convênio: ", min_value=0, step=1)
 
         if st.button("Cadastrar"):
-            Service.cliente_inserir(id, nome, email, fone)
+            Service.cliente_inserir(id, nome, email, fone, id_convenio)
             st.write(f"Cliente cadastrado: {nome}")
             st.success("Cliente cadastrado com sucesso!")
 

@@ -1,15 +1,12 @@
 import streamlit as st
 import pandas as pd
-import time
 from service import Service
 
 
-
-
-
 class ManterClienteUI:
+    @staticmethod
     def main():
-        st.header("Cadrastro de Clientes")
+        st.header("Cadastro de Clientes")
         tab1, tab2, tab3, tab4 = st.tabs(
             ["Inserir", "Listar", "Atualizar", "Excluir"]
         )
@@ -19,26 +16,42 @@ class ManterClienteUI:
         with tab4: ManterClienteUI.cliente_excluir()
 
     @staticmethod
+    def _selecionar_convenio(label, key):
+        convenios = Service.convenio_listar()
+        if not convenios:
+            st.warning("Cadastre um convênio antes de continuar.")
+            return None
+        return st.selectbox(label, convenios, format_func=str, key=key)
+
+    @staticmethod
+    def cliente_inserir():
+        id = st.number_input("Informe o id:", min_value=0, step=1, key="cliente_id")
+        nome = st.text_input("Informe o nome:", key="cliente_nome")
+        email = st.text_input("Informe o e-mail:", key="cliente_email")
+        fone = st.text_input("Informe o telefone:", key="cliente_fone")
+        convenio = ManterClienteUI._selecionar_convenio(
+            "Selecione o convênio:", "cliente_convenio"
+        )
+        if st.button("Inserir cliente", key="cliente_inserir_button"):
+            if convenio is None:
+                return
+            Service.cliente_inserir(id, nome, email, fone, convenio.get_id())
+            st.success("Cliente inserido com sucesso!")
+
+    @staticmethod
     def cliente_listar():
         clientes = Service.cliente_listar()
         if not clientes:
             st.write("Nenhum cliente cadastrado.")
             return
-
-        df = pd.DataFrame([cliente.to_json() for cliente in clientes])
+        registros = []
+        for cliente in clientes:
+            registro = cliente.to_json()
+            convenio = Service.convenio_listar_id(cliente.get_id_convenio())
+            registro["convenio"] = convenio.get_nome() if convenio else "Não informado"
+            registros.append(registro)
+        df = pd.DataFrame(registros)
         st.dataframe(df, hide_index=True)
-
-    @staticmethod
-    def cliente_inserir():
-        st.header("Cadastro de Cliente")
-        id = st.number_input("Informe o id:", min_value=0, step=1)
-        nome = st.text_input("Informe o nome:")
-        email = st.text_input("Informe o e-mail:")
-        fone = st.text_input("Informe o telefone:")
-        if st.button("Inserir"):
-            Service.cliente_inserir(id, nome, email, fone)
-            st.success("Cliente inserido com sucesso!")
-            st.write(f"Cliente inserido: {nome}")
 
     @staticmethod
     def cliente_atualizar():
@@ -55,8 +68,15 @@ class ManterClienteUI:
         nome = st.text_input("Novo nome", value=cliente.get_nome())
         email = st.text_input("Novo e-mail", value=cliente.get_email())
         fone = st.text_input("Novo fone", value=cliente.get_fone())
-        if st.button("Atualizar"):
-            Service.cliente_atualizar(cliente.get_id(), nome, email, fone)
+        convenio = ManterClienteUI._selecionar_convenio(
+            "Novo convênio:", "cliente_atualizar_convenio"
+        )
+        if st.button("Atualizar", key="cliente_atualizar_button"):
+            if convenio is None:
+                return
+            Service.cliente_atualizar(
+                cliente.get_id(), nome, email, fone, convenio.get_id()
+            )
             st.success("Cliente atualizado com sucesso!")
 
     @staticmethod
@@ -71,6 +91,6 @@ class ManterClienteUI:
             clientes,
             format_func=str,
         )
-        if st.button("Excluir"):
+        if st.button("Excluir", key="cliente_excluir_button"):
             Service.cliente_excluir(cliente.get_id())
             st.success("Cliente excluído com sucesso!")

@@ -56,7 +56,7 @@ class ManterServicoUI:
         email = st.text_input("Novo e-mail", value=servico.get_email())
         fone = st.text_input("Novo fone", value=servico.get_fone())
         if st.button("Atualizar"):
-            Service.cliente_atualizar(servico.get_id(), nome, email, fone)
+            Service.convenio_atualizar(servico.get_id(), nome, email, fone)
             st.success("Serviço atualizado com sucesso!")
 
     @staticmethod

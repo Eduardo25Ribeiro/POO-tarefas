@@ -20,7 +20,7 @@ class ManterAtendimentoUI:
 
     @staticmethod
     def atendimento_listar():
-        clientes = Service.cliente_listar()
+        clientes = Service.convenio_listar()
         if not clientes:
             st.write("Nenhum cliente cadastrado.")
             return
@@ -36,7 +36,7 @@ class ManterAtendimentoUI:
         email = st.text_input("Informe o e-mail:")
         fone = st.text_input("Informe o telefone:")
         if st.button("Inserir"):
-            Service.cliente_inserir(id, nome, email, fone)
+            Service.convenio_inserir(id, nome, email, fone)
             st.success("Atendimento inserido com sucesso!")
             st.write(f"Atendimento inserido: {nome}")
 
@@ -56,7 +56,7 @@ class ManterAtendimentoUI:
         email = st.text_input("Novo e-mail", value=cliente.get_email())
         fone = st.text_input("Novo fone", value=cliente.get_fone())
         if st.button("Atualizar"):
-            Service.cliente_atualizar(cliente.get_id(), nome, email, fone)
+            Service.convenio_atualizar(cliente.get_id(), nome, email, fone)
             st.success("Atendimento atualizado com sucesso!")
 
     @staticmethod
@@ -72,5 +72,5 @@ class ManterAtendimentoUI:
             format_func=str,
         )
         if st.button("Excluir"):
-            Service.cliente_excluir(cliente.get_id())
+            Service.convenio_excluir(cliente.get_id())
             st.success("Atendimentos excluído com sucesso!")

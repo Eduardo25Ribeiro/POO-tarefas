@@ -1,17 +1,13 @@
 from models.clientes import Cliente
 from models.clientedao import ClienteDAO
-from models.profissional import Profissional
-from models.profissionalDAO import ProfissionalDAO
-from models.atendimento import Atendimento
-from models.atendimentoDAO import AtendimentoDAO
-from models.horario import Horario
-from models.horariodao import HorarioDAO
+from models.convenio import Convenio
+from models.convenioDAO import ConvenioDAO
 
 
 class Service:
     @staticmethod
-    def cliente_inserir(id, nome, email, fone):
-        obj = Cliente(id, nome, email, fone)
+    def cliente_inserir(id, nome, email, fone, id_convenio):
+        obj = Cliente(id, nome, email, fone, id_convenio)
         ClienteDAO().inserir(obj)
 
     @staticmethod
@@ -23,8 +19,8 @@ class Service:
         return ClienteDAO().listar_id(id)
 
     @staticmethod
-    def cliente_atualizar(id, nome, email, fone):
-        obj = Cliente(id, nome, email, fone)
+    def cliente_atualizar(id, nome, email, fone, id_convenio):
+        obj = Cliente(id, nome, email, fone, id_convenio)
         ClienteDAO().atualizar(obj)
 
     @staticmethod
@@ -32,67 +28,41 @@ class Service:
         ClienteDAO().excluir(id)
 
     @staticmethod
-    def profissional_inserir(id, nome, email, especialidade):
-        obj = Profissional(id, nome, email, especialidade)
-        ProfissionalDAO().inserir(obj)
+    def cliente_listar_convenio(id_convenio):
+        return [
+            cliente
+            for cliente in ClienteDAO().listar()
+            if cliente.get_id_convenio() == id_convenio
+        ]
 
     @staticmethod
-    def profissional_listar():
-        return ProfissionalDAO().listar()
+    def cliente_associar_ao_convenio(id, id_convenio):
+        cliente = ClienteDAO().listar_id(id)
+        if cliente is None:
+            raise ValueError("Cliente não encontrado")
+        if ConvenioDAO().listar_id(id_convenio) is None:
+            raise ValueError("Convênio não encontrado")
+        cliente.set_convenio(id_convenio)
+        ClienteDAO().atualizar(cliente)
 
     @staticmethod
-    def profissional_listar_id(id):
-        return ProfissionalDAO().listar_id(id)
+    def convenio_inserir(id, nome, contato, fone):
+        obj = Convenio(id, nome, contato, fone)
+        ConvenioDAO().inserir(obj)
 
     @staticmethod
-    def profissional_atualizar(id, nome, email, especialidade):
-        obj = Profissional(id, nome, email, especialidade)
-        ProfissionalDAO().atualizar(obj)
+    def convenio_listar():
+        return ConvenioDAO().listar()
 
     @staticmethod
-    def profissional_excluir(id):
-        ProfissionalDAO().excluir(id)
+    def convenio_listar_id(id):
+        return ConvenioDAO().listar_id(id)
 
     @staticmethod
-    def atendimento_inserir(id, cliente, profissional, servico, horario):
-        obj = Atendimento(id, cliente, profissional, servico, horario)
-        AtendimentoDAO().inserir(obj)
+    def convenio_atualizar(id, nome, contato, fone):
+        obj = Convenio(id, nome, contato, fone)
+        ConvenioDAO().atualizar(obj)
 
     @staticmethod
-    def atendimento_listar():
-        return AtendimentoDAO().listar()
-
-    @staticmethod
-    def atendimento_listar_id(id):
-        return AtendimentoDAO().listar_id(id)
-
-    @staticmethod
-    def atendimento_atualizar(id, cliente, profissional, servico, horario):
-        obj = Atendimento(id, cliente, profissional, servico, horario)
-        AtendimentoDAO().atualizar(obj)
-
-    @staticmethod
-    def atendimento_excluir(id):
-        AtendimentoDAO().excluir(id)
-
-    @staticmethod
-    def horario_inserir(id, data, hora):
-        obj = Horario(id, data, hora)
-        HorarioDAO().inserir(obj)
-
-    @staticmethod
-    def horario_listar():
-        return HorarioDAO().listar()
-
-    @staticmethod
-    def horario_listar_id(id):
-        return HorarioDAO().listar_id(id)
-
-    @staticmethod
-    def horario_atualizar(id, data, hora):
-        obj = Horario(id, data, hora)
-        HorarioDAO().atualizar(obj)
-
-    @staticmethod
-    def horario_excluir(id):
-        HorarioDAO().excluir(id)
+    def convenio_excluir(id):
+        ConvenioDAO().excluir(id)
