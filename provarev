@@ -1,0 +1,678 @@
+import json
+import os
+import streamlit as st
+
+
+# ==========================================
+# 1. MODELO (Entidade do Domínio)
+# ==========================================
+class Tarefa:
+
+  def __init__(
+      self, id: int, titulo: str, descricao: str, concluida: bool = False
+  ):
+    self.id = id
+    # Manipulação de String: .strip() limpa espaços nas pontas e .title() padroniza
+    self.titulo = titulo.strip().title()
+    self.descricao = descricao.strip()
+    self.concluida = concluida
+
+  def to_dict(self) -> dict:
+    """Converte Objeto em Dicionário para salvar em JSON (to_json)."""
+    return {
+        "id": self.id,
+        "titulo": self.titulo,
+        "descricao": self.descricao,
+        "concluida": self.concluida,
+    }
+
+  @classmethod
+  def from_dict(cls, dados: dict) -> "Tarefa":
+    """Converte Dicionário do JSON de volta em Objeto (from_json)."""
+    return cls(
+        id=dados["id"],
+        titulo=dados["titulo"],
+        descricao=dados["descricao"],
+        concluida=dados["concluida"],
+    )
+
+  def __str__(self) -> str:
+    status = "✅" if self.concluida else "⏳"
+    return f"{status} [{self.id}] {self.titulo}"
+
+
+# ==========================================
+# 2. DAO (Persistência e Acesso a Dados em JSON)
+# ==========================================
+class TarefaDAO:
+
+  def __init__(self, arquivo_path: str = "tarefas.json"):
+    self.arquivo_path = arquivo_path
+    self._tarefas: list[Tarefa] = []
+    self._proximo_id = 1
+    self._carregar_arquivo()
+
+  def _salvar_arquivo(self):
+    """Grava todos os objetos no arquivo JSON."""
+    dados_dict = [t.to_dict() for t in self._tarefas]
+    with open(self.arquivo_path, "w", encoding="utf-8") as f:
+      json.dump(dados_dict, f, indent=4, ensure_ascii=False)
+
+  def _carregar_arquivo(self):
+    """Lê o arquivo JSON e reidrata a lista de objetos Tarefa."""
+    if not os.path.exists(self.arquivo_path):
+      self._tarefas = []
+      return
+    try:
+      with open(self.arquivo_path, "r", encoding="utf-8") as f:
+        dados_dict = json.load(f)
+        self._tarefas = [Tarefa.from_dict(item) for item in dados_dict]
+        if self._tarefas:
+          self._proximo_id = max(t.id for t in self._tarefas) + 1
+    except (json.JSONDecodeError, FileNotFoundError):
+      self._tarefas = []
+
+  def inserir(self, tarefa: Tarefa) -> Tarefa:
+    tarefa.id = self._proximo_id
+    self._proximo_id += 1
+    self._tarefas.append(tarefa)
+    self._salvar_arquivo()
+    return tarefa
+
+  def listar(self) -> list[Tarefa]:
+    return self._tarefas
+
+  def buscar_por_id(self, id: int) -> Tarefa | None:
+    for t in self._tarefas:
+      if t.id == id:
+        return t
+    return None
+
+  def excluir(self, id: int) -> bool:
+    tarefa = self.buscar_por_id(id)
+    if tarefa:
+      self._tarefas.remove(tarefa)
+      self._salvar_arquivo()
+      return True
+    return False
+
+  def salvar_alteracoes(self):
+    self._salvar_arquivo()
+
+
+# ==========================================
+# 3. SERVICE (Camada de Regras de Negócio)
+# ==========================================
+class TarefaService:
+
+  def __init__(self, dao: TarefaDAO):
+    self.dao = dao
+
+  def cadastrar(self, titulo: str, descricao: str) -> Tarefa:
+    # Validações e manipulação de texto
+    if not titulo.strip():
+      raise ValueError("O título não pode estar vazio.")
+    if len(titulo.strip()) < 3:
+      raise ValueError("O título precisa ter no mínimo 3 caracteres.")
+
+    nova_tarefa = Tarefa(id=0, titulo=titulo, descricao=descricao)
+    return self.dao.inserir(nova_tarefa)
+
+  def listar_todas(self) -> list[Tarefa]:
+    return self.dao.listar()
+
+  def alternar_status(self, id: int):
+    tarefa = self.dao.buscar_por_id(id)
+    if not tarefa:
+      raise ValueError("Tarefa não encontrada.")
+    tarefa.concluida = not tarefa.concluida
+    self.dao.salvar_alteracoes()
+
+  def remover(self, id: int):
+    if not self.dao.excluir(id):
+      raise ValueError("Não foi possível excluir a tarefa.")
+
+
+# ==========================================
+# 4. UI (Interface Gráfica + Todos os Comandos Streamlit)
+# ==========================================
+class TarefaUI:
+
+  def __init__(self, service: TarefaService):
+    self.service = service
+
+  def renderizar(self):
+    # COMANDO 1: Títulos e Elementos de Texto
+    st.title("⚡ Gerenciador de Tarefas — POO")
+    st.caption("Sistema de tarefas integrado com arquitetura em camadas")
+
+    # COMANDO 2: Barra Lateral (Sidebar) com Radio e Checkbox
+    st.sidebar.header("⚙️ Painel Lateral")
+    modo_visualizacao = st.sidebar.radio(
+        "Modo de Exibição", ["Completo", "Compacto"]
+    )
+    mostrar_ajuda = st.sidebar.checkbox("Mostrar ajuda", value=False)
+
+    if mostrar_ajuda:
+      # COMANDO 3: Mensagem Informativa
+      st.sidebar.info("Preencha o formulário para salvar dados no arquivo JSON.")
+
+    # COMANDO 4: Organização em Abas (Tabs)
+    tab_cadastrar, tab_listar, tab_comandos = st.tabs(
+        ["➕ Cadastrar", "📋 Listar Tarefas", "📖 Guia do Streamlit"]
+    )
+
+    with tab_cadastrar:
+      st.subheader("Formulário de Cadastro")
+
+      # COMANDO 5: Formulário (evita recarregar a tela a cada caractere digitado)
+      with st.form("form_tarefa", clear_on_submit=True):
+        # COMANDO 6: Inputs de Texto
+        titulo = st.text_input(
+            "Título da Tarefa", placeholder="Ex: Estudar POO para o IFRN"
+        )
+        descricao = st.text_area(
+            "Descrição", placeholder="Detalhes da tarefa..."
+        )
+
+        # COMANDO 7: Botão de Envio de Formulário
+        submetido = st.form_submit_button("Salvar Registro")
+
+        if submetido:
+          try:
+            self.service.cadastrar(titulo, descricao)
+            # COMANDO 8: Mensagem de Sucesso (Verde)
+            st.success("Tarefa cadastrada com sucesso!")
+          except ValueError as err:
+            # COMANDO 9: Mensagem de Erro (Vermelho)
+            st.error(str(err))
+
+    with tab_listar:
+      st.subheader("Minhas Tarefas Cadastradas")
+      tarefas = self.service.listar_todas()
+
+      if not tarefas:
+        st.warning("Nenhuma tarefa cadastrada até o momento.")
+      else:
+        for t in tarefas:
+          if modo_visualizacao == "Completo":
+            # COMANDO 10: Disposição em Colunas lado a lado
+            col_info, col_status, col_del = st.columns([3, 1, 1])
+
+            with col_info:
+              # COMANDO 11: Texto Formatado em Markdown
+              st.markdown(f"**{t}**")
+              if t.descricao:
+                st.caption(t.descricao)
+
+            with col_status:
+              rotulo = "Desfazer" if t.concluida else "Concluir"
+              # COMANDO 12: Botão Comum (obrigatório ter `key` em loops `for`)
+              if st.button(rotulo, key=f"status_{t.id}"):
+                self.service.alternar_status(t.id)
+                # COMANDO 13: Recarrega a tela imediatamente após alterar o estado
+                st.rerun()
+
+            with col_del:
+              if st.button("Excluir", key=f"del_{t.id}"):
+                self.service.remover(t.id)
+                st.rerun()
+
+            # COMANDO 14: Linha Divisória
+            st.divider()
+          else:
+            # Exibição compacta
+            st.write(f"{t}")
+
+    with tab_comandos:
+      st.subheader("Resumo dos Comandos Usados")
+      # COMANDO 15: Exibição de Código Formatado
+      st.code(
+          """
+# Configuração
+st.set_page_config(page_title="App", layout="wide")
+
+# Entradas e Formulários
+st.text_input("Rótulo")
+st.text_area("Rótulo")
+with st.form("nome_form"):
+    st.form_submit_button("Enviar")
+
+# Layout e Navegação
+st.sidebar.radio("Navegação", ["A", "B"])
+st.tabs(["Aba 1", "Aba 2"])
+st.columns([2, 1])
+st.divider()
+
+# Feedback e Estado
+st.success("Sucesso")
+st.error("Erro")
+st.session_state["chave"] = valor
+st.rerun()
+""",
+          language="python",
+      )
+
+
+# ==========================================
+# 5. INDEX / MAIN (Session State e Execução)
+# ==========================================
+def main():
+  # COMANDO 16: Configuração Geral da Página (deve ser a primeira instrução Streamlit)
+  st.set_page_config(
+      page_title="POO - IFRN CNAT", page_icon="⚡", layout="wide"
+  )
+
+  # COMANDO 17: Preservação de Estado no Session State
+  if "tarefa_dao" not in st.session_state:
+    st.session_state.tarefa_dao = TarefaDAO()
+
+  # Injeção de Dependências
+  dao = st.session_state.tarefa_dao
+  service = TarefaService(dao)
+  ui = TarefaUI(service)
+
+  # Renderização do Aplicativo
+  ui.renderizar()
+
+
+if __name__ == "__main__":
+  main()
+
+
+
+
+###
+import streamlit as st
+import pandas as pd
+import time
+
+# ==============================================================================
+# 1. CONFIGURAÇÃO DA PÁGINA (Deve ser o PRIMEIRO comando Streamlit)
+# ==============================================================================
+st.set_page_config(
+    page_title="Guia Completo Streamlit",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ==============================================================================
+# 2. BARRA LATERAL (SIDEBAR) & NAVEGAÇÃO
+# ==============================================================================
+st.sidebar.title("⚙️ Navegação")
+menu = st.sidebar.radio(
+    "Escolha uma Categoria:",
+    [
+        "1. Textos e Mídia",
+        "2. Entradas de Dados (Inputs)",
+        "3. Layout e Organização",
+        "4. Mensagens de Feedback",
+        "5. Dados e Gráficos",
+        "6. Gerenciamento de Estado (Session State)"
+    ]
+)
+
+st.sidebar.divider()
+st.sidebar.caption("Criado para referência rápida no Streamlit.")
+
+# ==============================================================================
+# CATEGORIA 1: TEXTOS E MÍDIA
+# ==============================================================================
+if menu == "1. Textos e Mídia":
+    st.title("📌 1. Textos e Elementos Visuais")
+    
+    st.header("Títulos e Subtítulos")
+    st.code("""
+st.title("Título Principal")
+st.header("Cabeçalho de Seção")
+st.subheader("Subcabeçalho")
+st.caption("Texto pequeno/Legenda")
+    """)
+    
+    st.subheader("Exibição de Texto com Formatadores")
+    st.markdown("Texto formatado em **negrito**, *itálico* e [links](https://streamlit.io).")
+    st.text("Texto puro sem formatação (fonte monospace).")
+    
+    st.subheader("Código Fonte e Fórmulas Matemáticas")
+    st.code("def hello():\n    print('Olá, Streamlit!')", language="python")
+    st.latex(r''' e^{i\pi} + 1 = 0 ''')
+
+
+# ==============================================================================
+# CATEGORIA 2: ENTRADAS DE DADOS (INPUTS)
+# ==============================================================================
+elif menu == "2. Entradas de Dados (Inputs)":
+    st.title("📥 2. Entradas de Dados do Usuário")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Inputs de Texto e Números")
+        nome = st.text_input("Campo de Texto", value="Digite aqui...")
+        senha = st.text_input("Campo de Senha", type="password")
+        descricao = st.text_area("Área de Texto (múltiplas linhas)")
+        numero = st.number_input("Entrada Numérica", min_value=0, max_value=100, value=25)
+        
+    with col2:
+        st.subheader("Seletores e Sliders")
+        opcao = st.selectbox("Caixa de Seleção (Selectbox)", ["Opção A", "Opção B", "Opção C"])
+        multiplas = st.multiselect("Múltipla Escolha", ["Python", "Java", "C++", "SQL"])
+        slider_num = st.slider("Barra Deslizante (Slider)", min_value=0, max_value=100, value=50)
+        check = st.checkbox("Caixa de Seleção (Checkbox)")
+        
+    st.divider()
+    st.subheader("Formulários (Agrupa entradas sem atualizar a página a cada clique)")
+    
+    with st.form("meu_formulario", clear_on_submit=True):
+        f_nome = st.text_input("Nome no Form")
+        f_email = st.text_input("E-mail no Form")
+        botao_form = st.form_submit_button("Enviar Formulário")
+        
+        if botao_form:
+            st.success(f"Formulário enviado! Nome: {f_nome}")
+
+
+# ==============================================================================
+# CATEGORIA 3: LAYOUT E ORGANIZAÇÃO
+# ==============================================================================
+elif menu == "3. Layout e Organização":
+    st.title("📐 3. Layout e Estrutura de Tela")
+    
+    st.subheader("Colunas (st.columns)")
+    c1, c2, c3 = st.columns([1, 2, 1]) # Proporções 1:2:1
+    with c1:
+        st.info("Coluna 1 (Largura 1)")
+    with c2:
+        st.info("Coluna 2 (Largura 2)")
+    with c3:
+        st.info("Coluna 3 (Largura 1)")
+        
+    st.subheader("Abas (st.tabs)")
+    aba1, aba2 = st.tabs(["Aba Principal", "Aba Secundária"])
+    with aba1:
+        st.write("Conteúdo da PRIMEIRA aba.")
+    with aba2:
+        st.write("Conteúdo da SEGUNDA aba.")
+        
+    st.subheader("Expansor / Sanfona (st.expander)")
+    with st.expander("Clique para expandir/recolher"):
+        st.write("Conteúdo oculto exibido apenas quando o usuário clica no painel.")
+
+    st.subheader("Contêineres (st.container)")
+    container = st.container(border=True)
+    container.write("Este texto está dentro de um contêiner com borda.")
+
+
+# ==============================================================================
+# CATEGORIA 4: MENSAGENS DE FEEDBACK
+# ==============================================================================
+elif menu == "4. Mensagens de Feedback":
+    st.title("🔔 4. Notificações e Status")
+    
+    st.subheader("Caixas de Alerta")
+    st.success("st.success(): Operação realizada com sucesso!")
+    st.info("st.info(): Informação útil para o usuário.")
+    st.warning("st.warning(): Mensagem de aviso/alerta.")
+    st.error("st.error(): Erro detectado no sistema.")
+    
+    st.subheader("Barra de Progresso e Spinner")
+    if st.button("Executar Processo Demorado"):
+        with st.spinner("Processando dados..."):
+            progresso = st.progress(0)
+            for i in range(100):
+                time.sleep(0.01)
+                progresso.progress(i + 1)
+        st.balloons() # Animação de balões na tela
+        st.toast("Processo concluído!", icon="🎉")
+
+
+# ==============================================================================
+# CATEGORIA 5: DADOS E GRÁFICOS
+# ==============================================================================
+elif menu == "5. Dados e Gráficos":
+    st.title("📊 5. Visualização de Dados")
+    
+    # Criando dados de exemplo
+    dados = pd.DataFrame({
+        'Categoria': ['A', 'B', 'C', 'D'],
+        'Valores': [10, 25, 15, 30]
+    })
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Métricas em Cartão (st.metric)")
+        st.metric(label="Total de Vendas", value="R$ 1.250,00", delta="+12%")
+        
+        st.subheader("Tabela de Dados (st.dataframe)")
+        st.dataframe(dados, use_container_width=True)
+        
+    with col2:
+        st.subheader("Gráficos Nativos")
+        st.line_chart(dados.set_index('Categoria'))
+        st.bar_chart(dados.set_index('Categoria'))
+
+
+# ==============================================================================
+# CATEGORIA 6: SESSION STATE
+# ==============================================================================
+elif menu == "6. Gerenciamento de Estado (Session State)":
+    st.title("🧠 6. st.session_state e Recarregamento")
+    
+    st.write("O Streamlit recarrega o script inteiro a cada interação. O `st.session_state` serve para manter valores entre as execuções.")
+    
+    # Inicialização da variável de estado
+    if "contador" not in st.session_state:
+        st.session_state.contador = 0
+
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("➕ Incrementar"):
+            st.session_state.contador += 1
+            st.rerun() # Força o recarregamento imediato
+            
+    with col2:
+        if st.button("➖ Decrementar"):
+            st.session_state.contador -= 1
+            st.rerun()
+            
+    with col3:
+        if st.button("🔄 Resetar"):
+            st.session_state.contador = 0
+            st.rerun()
+            
+    st.markdown(f"### Valor Atual do Contador: `{st.session_state.contador}`")
+###
+
+###
+import streamlit as st
+
+# Configuração da página
+st.set_page_config(page_title="Exemplos de Menus - Streamlit", layout="wide")
+
+st.title("🧩 Guia de Menus no Streamlit")
+st.write("Escolha o tipo de navegação no painel principal ou explore os modelos abaixo.")
+
+# ==============================================================================
+# OPÇÃO A: SELETOR DE ESTILO PARA DEMONSTRAÇÃO
+# ==============================================================================
+estilo_menu = st.radio(
+    "Escolha o tipo de menu para testar:",
+    ["1. Vertical Na Sidebar (Nativo)", "2. Horizontal com Abas (Nativo)", "3. Horizontal com Botões/Colunas", "4. Usando 'streamlit-option-menu' (Biblioteca Externa)"],
+    horizontal=True
+)
+
+st.divider()
+
+# ==============================================================================
+# 1. MENU VERTICAL NA SIDEBAR (NATIVO)
+# ==============================================================================
+if estilo_menu == "1. Vertical Na Sidebar (Nativo)":
+    st.subheader("📍 Menu Vertical (Barra Lateral)")
+    
+    # Criando os itens na barra lateral usando st.sidebar
+    opcao_sidebar = st.sidebar.radio(
+        "Navegação Principal",
+        ["Home", "Relatórios", "Configurações", "Perfil"]
+    )
+    
+    st.info("Veja o menu na barra lateral esquerda 👈")
+    
+    # Lógica de renderização de conteúdo
+    if opcao_sidebar == "Home":
+        st.write("### Página Inicial")
+        st.write("Conteúdo da tela de Início...")
+    elif opcao_sidebar == "Relatórios":
+        st.write("### Painel de Relatórios")
+        st.write("Gráficos e tabelas ficam aqui.")
+    elif opcao_sidebar == "Configurações":
+        st.write("### Configurações do Sistema")
+        st.write("Opções de preferências e parâmetros.")
+    elif opcao_sidebar == "Perfil":
+        st.write("### Perfil do Usuário")
+        st.write("Informações da conta.")
+
+# ==============================================================================
+# 2. MENU HORIZONTAL COM ABAS (NATIVO)
+# ==============================================================================
+elif estilo_menu == "2. Horizontal com Abas (Nativo)":
+    st.subheader("📍 Menu Horizontal usando `st.tabs`")
+    
+    # st.tabs cria uma barra navegável na horizontal no topo do container
+    aba1, aba2, aba3, aba4 = st.tabs(["🏠 Home", "📊 Relatórios", "⚙️ Configurações", "👤 Perfil"])
+    
+    with aba1:
+        st.write("### Conteúdo da Aba Home")
+        st.success("Você está na página inicial!")
+        
+    with aba2:
+        st.write("### Conteúdo da Aba Relatórios")
+        st.metric("Vendas Totais", "R$ 45.000,00", "+15%")
+        
+    with aba3:
+        st.write("### Conteúdo da Aba Configurações")
+        st.checkbox("Notificações por E-mail")
+        
+    with aba4:
+        st.write("### Conteúdo da Aba Perfil")
+        st.text_input("Nome", value="Eduardo")
+
+# ==============================================================================
+# 3. MENU HORIZONTAL COM BOTÕES EM COLUNAS
+# ==============================================================================
+elif estilo_menu == "3. Horizontal com Botões/Colunas":
+    st.subheader("📍 Menu Horizontal Nativamente Customizado (Colunas + Botões)")
+    
+    # Inicializa o estado de navegação caso não exista
+    if "pagina_atual" not in st.session_state:
+        st.session_state.pagina_atual = "Home"
+
+    # Criando colunas de tamanhos iguais para simular botões alinhados
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("🏠 Home", use_container_width=True):
+            st.session_state.pagina_atual = "Home"
+            st.rerun()
+            
+    with col2:
+        if st.button("📊 Relatórios", use_container_width=True):
+            st.session_state.pagina_atual = "Relatórios"
+            st.rerun()
+            
+    with col3:
+        if st.button("⚙️ Configurações", use_container_width=True):
+            st.session_state.pagina_atual = "Configurações"
+            st.rerun()
+            
+    with col4:
+        if st.button("👤 Perfil", use_container_width=True):
+            st.session_state.pagina_atual = "Perfil"
+            st.rerun()
+
+    st.divider()
+
+    # Exibição baseada no botão clicado
+    p = st.session_state.pagina_atual
+    st.markdown(f"#### PÁGINA ATUAL: `{p}`")
+    
+    if p == "Home":
+        st.write("Conteúdo da tela Inicial...")
+    elif p == "Relatórios":
+        st.write("Exibindo relatórios atualizados.")
+    elif p == "Configurações":
+        st.write("Painel de ajustes.")
+    elif p == "Perfil":
+        st.write("Dados da conta do usuário.")
+
+# ==============================================================================
+# 4. MENU PROFISSIONAL COM `streamlit-option-menu`
+# ==============================================================================
+elif estilo_menu == "4. Usando 'streamlit-option-menu' (Biblioteca Externa)":
+    st.subheader("📍 Menu Avançado com `streamlit-option-menu`")
+    st.caption("Requer instalação prévia: `pip install streamlit-option-menu`")
+
+    try:
+        from streamlit_option_menu import option_menu
+
+        # MENU HORIZONTAL
+        menu_horiz = option_menu(
+            menu_title=None,  # Oculta o título do menu
+            options=["Home", "Relatórios", "Configurações"],
+            icons=["house", "bar-chart", "gear"],  # Ícones do Bootstrap (https://icons.getbootstrap.com/)
+            default_index=0,
+            orientation="horizontal",
+            styles={
+                "container": {"padding": "0!important", "background-color": "#fafafa"},
+                "icon": {"color": "orange", "font-size": "18px"},
+                "nav-link": {
+                    "font-size": "15px",
+                    "text-align": "center",
+                    "margin": "0px",
+                    "--hover-color": "#eee",
+                },
+                "nav-link-selected": {"background-color": "#02ab21"},
+            },
+        )
+
+        st.write(f"Você selecionou a opção: **{menu_horiz}**")
+
+    except ImportError:
+        st.error(
+            "A biblioteca `streamlit-option-menu` não está instalada no ambiente."
+        )
+        st.code("pip install streamlit-option-menu", language="bash")
+###
+
+# Cria um menu vertical na barra lateral esquerda
+modo_visualizacao = st.sidebar.radio(
+    "Modo de Exibição", 
+    ["Completo", "Compacto"]
+)
+
+
+# Cria um menu de navegação horizontal no topo da área principal
+tab_cadastrar, tab_listar = st.tabs(
+    ["➕ Cadastrar Tarefa", "📋 Listar Tarefas"]
+)
+
+with tab_cadastrar:
+    # Conteúdo da primeira aba
+    ...
+
+with tab_listar:
+    # Conteúdo da segunda aba
+    ...
+
+
+# Torna o menu de rádio nativo em um menu horizontal
+opcao = st.radio(
+    "Navegue pelas páginas:",
+    ["Início", "Projetos", "Sobre"],
+    horizontal=True
+)
+
+
+
