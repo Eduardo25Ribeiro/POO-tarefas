@@ -1,0 +1,346 @@
+import json
+import os
+from datetime import datetime
+import streamlit as st
+
+# ==========================================
+# 1. MODELOS (Com Encapsulamento / Getters e Setters)
+# ==========================================
+
+class Profissional:
+    def __init__(self, id: int = 0, nome: str = "", email: str = "", especialidade: str = ""):
+        self._id = id
+        self._nome = nome
+        self._email = email
+        self._especialidade = especialidade
+
+    @property
+    def id(self) -> int: return self._id
+    @id.setter
+    def id(self, value: int): self._id = value
+
+    @property
+    def nome(self) -> str: return self._nome
+    @nome.setter
+    def nome(self, value: str): self._nome = value.strip().title()
+
+    @property
+    def email(self) -> str: return self._email
+    @email.setter
+    def email(self, value: str): self._email = value.strip()
+
+    @property
+    def especialidade(self) -> str: return self._especialidade
+    @especialidade.setter
+    def especialidade(self, value: str): self._especialidade = value.strip()
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "nome": self.nome, "email": self.email, "especialidade": self.especialidade}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Profissional":
+        return cls(d["id"], d["nome"], d["email"], d["especialidade"])
+
+class Horario:
+    def __init__(self, id: int = 0, data: str = "", confirmado: bool = False, id_cliente: int = 0, id_servico: int = 0, id_profissional: int = 0):
+        self._id = id
+        self._data = data
+        self._confirmado = confirmado
+        self._id_cliente = id_cliente
+        self._id_servico = id_servico
+        self._id_profissional = id_profissional  # Associação com Profissional
+
+    @property
+    def id(self) -> int: return self._id
+    @id.setter
+    def id(self, value: int): self._id = value
+
+    @property
+    def data(self) -> str: return self._data
+    @data.setter
+    def data(self, value: str): self._data = value
+
+    @property
+    def confirmado(self) -> bool: return self._confirmado
+    @confirmado.setter
+    def confirmado(self, value: bool): self._confirmado = value
+
+    @property
+    def id_cliente(self) -> int: return self._id_cliente
+    @id_cliente.setter
+    def id_cliente(self, value: int): self._id_cliente = value
+
+    @property
+    def id_servico(self) -> int: return self._id_servico
+    @id_servico.setter
+    def id_servico(self, value: int): self._id_servico = value
+
+    @property
+    def id_profissional(self) -> int: return self._id_profissional
+    @id_profissional.setter
+    def id_profissional(self, value: int): self._id_profissional = value
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "data": self.data, "confirmado": self.confirmado,
+            "id_cliente": self.id_cliente, "id_servico": self.id_servico, "id_profissional": self.id_profissional
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Horario":
+        return cls(d["id"], d["data"], d["confirmado"], d["id_cliente"], d["id_servico"], d.get("id_profissional", 0))
+
+class Atendimento:
+    def __init__(self, id: int = 0, data: str = "", queixa_principal: str = "", historico_saude: str = "", avaliacao: str = "", prescricao: str = "", id_horario: int = 0):
+        self._id = id
+        self._data = data
+        self._queixa_principal = queixa_principal
+        self._historico_saude = historico_saude
+        self._avaliacao = avaliacao
+        self._prescricao = prescricao
+        self._id_horario = id_horario  # Associação com Horário
+
+    @property
+    def id(self) -> int: return self._id
+    @id.setter
+    def id(self, value: int): self._id = value
+
+    @property
+    def data(self) -> str: return self._data
+    @data.setter
+    def data(self, value: str): self._data = value
+
+    @property
+    def queixa_principal(self) -> str: return self._queixa_principal
+    @queixa_principal.setter
+    def queixa_principal(self, value: str): self._queixa_principal = value.strip()
+
+    @property
+    def historico_saude(self) -> str: return self._historico_saude
+    @historico_saude.setter
+    def historico_saude(self, value: str): self._historico_saude = value.strip()
+
+    @property
+    def avaliacao(self) -> str: return self._avaliacao
+    @avaliacao.setter
+    def avaliacao(self, value: str): self._avaliacao = value.strip()
+
+    @property
+    def prescricao(self) -> str: return self._prescricao
+    @prescricao.setter
+    def prescricao(self, value: str): self._prescricao = value.strip()
+
+    @property
+    def id_horario(self) -> int: return self._id_horario
+    @id_horario.setter
+    def id_horario(self, value: int): self._id_horario = value
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "data": self.data, "queixa_principal": self.queixa_principal,
+            "historico_saude": self.historico_saude, "avaliacao": self.avaliacao,
+            "prescricao": self.prescricao, "id_horario": self.id_horario
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Atendimento":
+        return cls(d["id"], d["data"], d["queixa_principal"], d["historico_saude"], d["avaliacao"], d["prescricao"], d["id_horario"])
+
+
+# ==========================================
+# 2. DAOs (Persistência em JSON)
+# ==========================================
+
+class ProfissionalDAO:
+    def __init__(self, file_path: str = "profissionais.json"):
+        self.file_path = file_path
+        self.objetos: list[Profissional] = []
+        self._carregar()
+
+    def _salvar(self):
+        with open(self.file_path, "w", encoding="utf-8") as f:
+            json.dump([obj.to_dict() for obj in self.objetos], f, indent=4, ensure_ascii=False)
+
+    def _carregar(self):
+        if os.path.exists(self.file_path):
+            try:
+                with open(self.file_path, "r", encoding="utf-8") as f:
+                    self.objetos = [Profissional.from_dict(d) for d in json.load(f)]
+            except: self.objetos = []
+
+    def inserir(self, obj: Profissional) -> Profissional:
+        obj.id = max([p.id for p in self.objetos], default=0) + 1
+        self.objetos.append(obj)
+        self._salvar()
+        return obj
+
+    def listar(self) -> list[Profissional]: return self.objetos
+    def buscar_por_id(self, id: int): return next((p for p in self.objetos if p.id == id), None)
+
+class AtendimentoDAO:
+    def __init__(self, file_path: str = "atendimentos.json"):
+        self.file_path = file_path
+        self.objetos: list[Atendimento] = []
+        self._carregar()
+
+    def _salvar(self):
+        with open(self.file_path, "w", encoding="utf-8") as f:
+            json.dump([obj.to_dict() for obj in self.objetos], f, indent=4, ensure_ascii=False)
+
+    def _carregar(self):
+        if os.path.exists(self.file_path):
+            try:
+                with open(self.file_path, "r", encoding="utf-8") as f:
+                    self.objetos = [Atendimento.from_dict(d) for d in json.load(f)]
+            except: self.objetos = []
+
+    def inserir(self, obj: Atendimento) -> Atendimento:
+        obj.id = max([a.id for a in self.objetos], default=0) + 1
+        self.objetos.append(obj)
+        self._salvar()
+        return obj
+
+    def atualizar(self, obj: Atendimento):
+        for i, a in enumerate(self.objetos):
+            if a.id == obj.id:
+                self.objetos[i] = obj
+                self._salvar()
+                return True
+        return False
+
+    def excluir(self, id: int):
+        self.objetos = [a for a in self.objetos if a.id != id]
+        self._salvar()
+
+    def listar(self) -> list[Atendimento]: return self.objetos
+
+
+# ==========================================
+# 3. SERVICE (Centraliza Regras de Negócio)
+# ==========================================
+
+class Service:
+    def __init__(self, prof_dao: ProfissionalDAO, atend_dao: AtendimentoDAO):
+        self.prof_dao = prof_dao
+        self.atend_dao = atend_dao
+
+    # --- Profissional ---
+    def profissional_inserir(self, nome: str, email: str, especialidade: str):
+        if not nome.strip(): raise ValueError("Nome é obrigatório.")
+        p = Profissional(nome=nome, email=email, especialidade=especialidade)
+        return self.prof_dao.inserir(p)
+
+    def profissional_listar(self): return self.prof_dao.listar()
+
+    # --- Atendimento ---
+    def atendimento_inserir(self, queixa: str, historico: str, avaliacao: str, prescricao: str, id_horario: int):
+        if not queixa.strip(): raise ValueError("A queixa principal é obrigatória.")
+        data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+        a = Atendimento(
+            data=data_atual, queixa_principal=queixa, historico_saude=historico,
+            avaliacao=avaliacao, prescricao=prescricao, id_horario=id_horario
+        )
+        return self.atend_dao.inserir(a)
+
+    def atendimento_atualizar(self, id: int, queixa: str, historico: str, avaliacao: str, prescricao: str, id_horario: int):
+        a = Atendimento(
+            id=id, data=datetime.now().strftime("%d/%m/%Y %H:%M"), queixa_principal=queixa,
+            historico_saude=historico, avaliacao=avaliacao, prescricao=prescricao, id_horario=id_horario
+        )
+        self.atend_dao.atualizar(a)
+
+    def atendimento_excluir(self, id: int): self.atend_dao.excluir(id)
+    def atendimento_listar(self): return self.atend_dao.listar()
+
+
+# ==========================================
+# 4. INTERFACES (Streamlit)
+# ==========================================
+
+class ManterProfissionalUI:
+    def __init__(self, service: Service): self.service = service
+
+    def renderizar(self):
+        st.header("👨‍⚕️ Manter Cadastro de Profissionais")
+        
+        with st.form("form_prof"):
+            nome = st.text_input("Nome Profissional")
+            email = st.text_input("E-mail")
+            especialidade = st.text_input("Especialidade")
+            if st.form_submit_button("Salvar"):
+                try:
+                    self.service.profissional_inserir(nome, email, especialidade)
+                    st.success("Profissional cadastrado com sucesso!")
+                except Exception as e: st.error(str(e))
+
+        st.subheader("Lista de Profissionais")
+        for p in self.service.profissional_listar():
+            st.write(f"**[{p.id}] {p.nome}** — {p.especialidade} ({p.email})")
+
+class ManterAtendimentoUI:
+    def __init__(self, service: Service): self.service = service
+
+    def renderizar(self):
+        st.header("📋 Manter Cadastro de Atendimentos")
+        tab1, tab2 = st.tabs(["➕ Novo / Editar Atendimento", "🔍 Listar & Gerenciar"])
+
+        with tab1:
+            with st.form("form_atend"):
+                id_edit = st.number_input("ID para Atualizar (0 para Novo)", min_value=0, step=1)
+                id_horario = st.number_input("ID do Horário", min_value=1, value=1)
+                queixa = st.text_area("Queixa Principal")
+                historico = st.text_area("Histórico de Saúde")
+                avaliacao = st.text_area("Avaliação Médica")
+                prescricao = st.text_area("Prescrição")
+
+                if st.form_submit_button("Salvar Registro"):
+                    try:
+                        if id_edit == 0:
+                            self.service.atendimento_inserir(queixa, historico, avaliacao, prescricao, id_horario)
+                            st.success("Atendimento criado!")
+                        else:
+                            self.service.atendimento_atualizar(id_edit, queixa, historico, avaliacao, prescricao, id_horario)
+                            st.success("Atendimento atualizado!")
+                    except Exception as e: st.error(str(e))
+
+        with tab2:
+            st.subheader("Atendimentos Registrados")
+            for a in self.service.atendimento_listar():
+                c1, c2 = st.columns([4, 1])
+                with c1:
+                    st.markdown(f"**ID [{a.id}] - Horário Ref: #{a.id_horario}** ({a.data})")
+                    st.caption(f"**Queixa:** {a.queixa_principal} | **Prescrição:** {a.prescricao}")
+                with c2:
+                    if st.button("Excluir", key=f"del_atend_{a.id}"):
+                        self.service.atendimento_excluir(a.id)
+                        st.rerun()
+                st.divider()
+
+
+# ==========================================
+# 5. INDEX UI (Navegação Sidebar & Session State)
+# ==========================================
+
+def index_ui():
+    st.set_page_config(page_title="Sistema Agendamento", layout="wide")
+
+    # Injeção no Session State
+    if "prof_dao" not in st.session_state: st.session_state.prof_dao = ProfissionalDAO()
+    if "atend_dao" not in st.session_state: st.session_state.atend_dao = AtendimentoDAO()
+
+    service = Service(st.session_state.prof_dao, st.session_state.atend_dao)
+
+    # Menu Lateral Exigido no Roteiro
+    st.sidebar.title("📌 Menu Admin")
+    menu = st.sidebar.radio("Selecione o Caso de Uso:", [
+        "Manter Profissionais",
+        "Manter Atendimentos"
+    ])
+
+    if menu == "Manter Profissionais":
+        ManterProfissionalUI(service).renderizar()
+    elif menu == "Manter Atendimentos":
+        ManterAtendimentoUI(service).renderizar()
+
+if __name__ == "__main__":
+    index_ui()
