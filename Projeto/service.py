@@ -6,8 +6,8 @@ from models.convenioDAO import ConvenioDAO
 
 class Service:
     @staticmethod
-    def cliente_inserir(id, nome, email, fone, id_convenio):
-        obj = Cliente(id, nome, email, fone, id_convenio)
+    def cliente_inserir(id, nome, email, fone, senha):
+        obj = Cliente(id, nome, email, fone, senha)
         ClienteDAO().inserir(obj)
 
     @staticmethod
@@ -19,8 +19,8 @@ class Service:
         return ClienteDAO().listar_id(id)
 
     @staticmethod
-    def cliente_atualizar(id, nome, email, fone, id_convenio):
-        obj = Cliente(id, nome, email, fone, id_convenio)
+    def cliente_atualizar(id, nome, email, fone, senha):
+        obj = Cliente(id, nome, email, fone, senha)
         ClienteDAO().atualizar(obj)
 
     @staticmethod
@@ -29,12 +29,21 @@ class Service:
 
     @staticmethod
     def cliente_listar_convenio(id_convenio):
-        return [
-            cliente
+        return [cliente
             for cliente in ClienteDAO().listar()
             if cliente.get_id_convenio() == id_convenio
         ]
-
+    @staticmethod
+    def cliente_criar_admin():
+        for c in Service.cliente_listar():
+            if c.get_email() == "admin": return
+        Service.cliente_inserir("admin", "admin","admin","fone", "1234")
+    @staticmethod
+    def cliente_autenticar(email,senha):
+        for c in Service.cliente_listar():
+            if c.get_email() == email and c.get_senha() == senha:
+                return {"id": c.get_id(), "nome": c.get_nome()}
+        return None
     @staticmethod
     def cliente_associar_ao_convenio(id, id_convenio):
         cliente = ClienteDAO().listar_id(id)

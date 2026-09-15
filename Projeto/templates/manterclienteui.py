@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 from service import Service
 
 
@@ -29,14 +30,12 @@ class ManterClienteUI:
         nome = st.text_input("Informe o nome:", key="cliente_nome")
         email = st.text_input("Informe o e-mail:", key="cliente_email")
         fone = st.text_input("Informe o telefone:", key="cliente_fone")
-        convenio = ManterClienteUI._selecionar_convenio(
-            "Selecione o convênio:", "cliente_convenio"
-        )
-        if st.button("Inserir cliente", key="cliente_inserir_button"):
-            if convenio is None:
-                return
-            Service.cliente_inserir(id, nome, email, fone, convenio.get_id())
-            st.success("Cliente inserido com sucesso!")
+        senha = st.text_input("Informe a senha", type="password")
+        if st.button("Inserir"):
+            Service.cliente_inserir(nome, email, fone, senha)
+            st.success("Cliente inserido com sucesso")
+            time.sleep(2)
+            st.rerun()
 
     @staticmethod
     def cliente_listar():
@@ -56,28 +55,21 @@ class ManterClienteUI:
     @staticmethod
     def cliente_atualizar():
         clientes = Service.cliente_listar()
-        if not clientes:
+        if len(clientes) == 0:
             st.write("Nenhum cliente cadastrado.")
-            return
+        else:
+            op = st.selectbox("Atualização de Clientes", clientes)
+            nome = st.text_input("Novo nome", op.get_nome())
+            email = st.text_input("Novo e-mail", op.get_email())
+            fone = st.text_input("Novo fone", op.get_fone())
+            senha = st.text_input("Nova senha", op.get_senha(), type="password")
 
-        cliente = st.selectbox(
-            "Atualização de Clientes",
-            clientes,
-            format_func=str,
-        )
-        nome = st.text_input("Novo nome", value=cliente.get_nome())
-        email = st.text_input("Novo e-mail", value=cliente.get_email())
-        fone = st.text_input("Novo fone", value=cliente.get_fone())
-        convenio = ManterClienteUI._selecionar_convenio(
-            "Novo convênio:", "cliente_atualizar_convenio"
-        )
-        if st.button("Atualizar", key="cliente_atualizar_button"):
-            if convenio is None:
-                return
-            Service.cliente_atualizar(
-                cliente.get_id(), nome, email, fone, convenio.get_id()
-            )
-            st.success("Cliente atualizado com sucesso!")
+
+  
+        if st.button("Atualizar"):
+            id = op.get_id()
+            Service.cliente_atualizar(id, nome, email, fone, senha)
+            st.success("Cliente atualizado com sucesso")
 
     @staticmethod
     def cliente_excluir():

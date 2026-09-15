@@ -1,10 +1,10 @@
 class Cliente:
-    def __init__(self, id, nome, email, fone, id_convenio):
+    def __init__(self, id, nome, email, fone, senha):
         self.set_id(id)
         self.set_nome(nome)
         self.set_email(email)
         self.set_fone(fone)
-        self.set_convenio(id_convenio)
+        self.set_senha(senha)
 
     def set_id(self, id):
         if id < 0:
@@ -26,10 +26,10 @@ class Cliente:
             raise ValueError("Fone deve ser informado")
         self.__fone = fone
 
-    def set_convenio(self, id_convenio):
-        if id_convenio is not None and id_convenio < 0:
+    def set_senha(self, senha):
+        if senha is not None and senha < 0:
             raise ValueError("Id do convênio deve ser positivo")
-        self.__id_convenio = id_convenio
+        self.__senha = senha
     def get_id(self):
         return self.__id
 
@@ -42,8 +42,8 @@ class Cliente:
     def get_fone(self):
         return self.__fone
 
-    def get_id_convenio(self):
-        return self.__id_convenio
+    def get_senha(self):
+        return self.__senha
 
     def to_json(self):
         return {
@@ -51,7 +51,7 @@ class Cliente:
             "nome": self.__nome,
             "email": self.__email,
             "fone": self.__fone,
-            "id_convenio": self.__id_convenio,
+            "id_convenio": self.__senha,
         }
 
     @staticmethod
@@ -61,11 +61,8 @@ class Cliente:
             dic["nome"],
             dic["email"],
             dic["fone"],
-            dic.get("id_convenio"),
+            dic.get("senha"),
         )
 
     def __str__(self):
-        return (
-            f"{self.__id}-{self.__nome}-{self.__email}-"
-            f"{self.__fone}-convênio:{self.__id_convenio}"
-        )
+        return (f"{self.__id}-{self.__nome}-{self.__email}-"f"{self.__fone}-convênio:{self.__senha}")
