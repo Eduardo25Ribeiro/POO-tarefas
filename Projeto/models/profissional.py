@@ -2,12 +2,12 @@ from datetime import datetime
 
 
 class Profissional:
-    def __init__(self, id, data, confirmado, id_cliente, id_servico):
+    def __init__(self, id, nome,email,especialidade,senha):
         self.set_id(id)
-        self.set_data(data)
-        self.set_confirmado(confirmado)
-        self.set_id_profissional(id_cliente)
-        self.set_id_servico(id_servico)
+        self.set_nome(nome)
+        self.set_email(email)
+        self.set_especialidade(especialidade)
+        self.set_senha(senha)
 
     def set_id(self, id):
         if not isinstance(id, int):
@@ -16,64 +16,58 @@ class Profissional:
             raise ValueError("Id deve ser positivo")
         self.__id = id
 
-    def set_data(self, data):
+    def set_nome(self, data):
         if isinstance(data, datetime):
-            self.__data = data
+            self.__nome = data
             return
         if isinstance(data, str):
-            self.__data = datetime.strptime(data, "%d/%m/%Y %H:%M")
+            self.__nome = datetime.strptime(data, "%d/%m/%Y %H:%M")
             return
         raise TypeError("Data deve ser do tipo datetime ou string no formato dd/mm/AAAA HH:MM")
 
-    def set_confirmado(self, confirmado):
+    def set_email(self, confirmado):
         if not isinstance(confirmado, bool):
             raise TypeError("Confirmado deve ser True ou False")
-        self.__confirmado = confirmado
+        self.__email = confirmado
 
-    def set_id_profissional(self, id_cliente):
+    def set_especialidade(self, id_cliente):
         if not isinstance(id_cliente, int):
             raise TypeError("Id do cliente deve ser um número inteiro")
         if id_cliente < 0:
             raise ValueError("Id do cliente deve ser positivo")
-        self.__id_cliente = id_cliente
+        self.__especialidade = id_cliente
 
-    def set_id_servico(self, id_servico):
+    def set_senha(self, id_servico):
         if not isinstance(id_servico, int):
             raise TypeError("Id do serviço deve ser um número inteiro")
         if id_servico < 0:
             raise ValueError("Id do serviço deve ser positivo")
-        self.__id_servico = id_servico
+        self.__senha = id_servico
 
     def get_id(self):
         return self.__id
 
-    def get_data(self):
-        return self.__data
+    def get_nome(self):
+        return self.__nome
 
-    def get_confirmado(self):
-        return self.__confirmado
+    def get_email(self):
+        return self.__email
 
-    def get_id_profissional(self):
-        return self.__id_cliente
+    def get_especialidade(self):
+        return self.__especialidade
 
-    def get_id_servico(self):
-        return self.__id_servico
+    def get_senha(self):
+        return self.__senha
 
     def to_json(self):
         return {
             "id": self.__id,
-            "data": self.__data.strftime("%d/%m/%Y %H:%M"),
-            "confirmado": self.__confirmado,
-            "id_cliente": self.__id_cliente,
-            "id_servico": self.__id_servico,
+            "nome": self.__nome.strftime("%d/%m/%Y %H:%M"),
+            "email": self.__email,
+            "especialidade": self.__especialidade,
+            "senha": self.__senha,
         }
 
     @staticmethod
     def from_json(dic):
-        return Profissional(
-            dic["id"],
-            dic["data"],
-            dic["confirmado"],
-            dic["id_cliente"],
-            dic["id_servico"],
-        )
+        return Profissional(dic["id"],dic["nome"],dic["email"],dic["especialidade"],dic["senha"],)

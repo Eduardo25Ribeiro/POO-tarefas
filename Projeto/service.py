@@ -2,7 +2,8 @@ from models.clientes import Cliente
 from models.clientedao import ClienteDAO
 from models.convenio import Convenio
 from models.convenioDAO import ConvenioDAO
-
+from models.profissional import Profissional
+from models.profissionalDAO import Profissional
 
 class Service:
     @staticmethod
@@ -20,7 +21,7 @@ class Service:
 
     @staticmethod
     def cliente_atualizar(id, nome, email, fone, senha):
-        obj = Cliente(id, nome, email, fone, senha)
+        obj = Cliente(1, nome, email, fone, senha)
         ClienteDAO().atualizar(obj)
 
     @staticmethod
@@ -37,12 +38,20 @@ class Service:
     def cliente_criar_admin():
         for c in Service.cliente_listar():
             if c.get_email() == "admin": return
-        Service.cliente_inserir("admin", "admin","admin","fone", "1234")
+        Service.cliente_inserir(1, "admin","admin","fone", 1234)
     @staticmethod
-    def cliente_autenticar(email,senha):
+    @staticmethod
+    def cliente_autenticar(email, senha):
         for c in Service.cliente_listar():
-            if c.get_email() == email and c.get_senha() == senha:
-                return {"id": c.get_id(), "nome": c.get_nome()}
+            print("EMAIL:", c.get_email())
+            print("SENHA:", c.get_senha())
+
+        if c.get_email() == email and c.get_senha() == senha:
+            return {
+                "id": c.get_id(),
+                "nome": c.get_nome()
+            }
+
         return None
     @staticmethod
     def cliente_associar_ao_convenio(id, id_convenio):

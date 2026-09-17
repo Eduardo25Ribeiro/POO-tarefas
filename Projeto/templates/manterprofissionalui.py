@@ -34,9 +34,10 @@ class ManterProfissionalUI:
         id = st.number_input("Informe o id:", min_value=0, step=1)
         nome = st.text_input("Informe o nome:")
         email = st.text_input("Informe o e-mail:")
-        fone = st.text_input("Informe o telefone:")
+        especialidade = st.text_input("Informe a especialide:" )
+        senha = st.text_input("Informe a senha:")
         if st.button("Inserir"):
-            Service.servico_inserir(id, nome, email, fone)
+            Service.servico_inserir(id, nome, email,especialidade,senha)
             st.success("Profissional inserido com sucesso!")
             st.write(f"Profissional inserido: {nome}")
 
@@ -54,9 +55,9 @@ class ManterProfissionalUI:
         )
         nome = st.text_input("Novo nome", value=servico.get_nome())
         email = st.text_input("Novo e-mail", value=servico.get_email())
-        fone = st.text_input("Novo fone", value=servico.get_fone())
+        especialidade = st.text_input("Nova especialidade", value=servico.get_especialidade())
         if st.button("Atualizar"):
-            Service.convenio_atualizar(servico.get_id(), nome, email, fone)
+            Service.convenio_atualizar(servico.get_id(), nome, email, especialidade)
             st.success("Profissional atualizado com sucesso!")
 
     @staticmethod
