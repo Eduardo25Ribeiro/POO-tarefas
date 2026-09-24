@@ -4,15 +4,20 @@
     "nome": "edu",
     "email": "eduard@gmail.com",
     "fone": "111111",
-    "senha": "1234",
-    "id_convenio": null
+    "senha": "1234"
   },
   {
     "id": 2,
     "nome": "admin",
     "email": "admin",
     "fone": "fone",
-    "senha": "1234",
-    "id_convenio": null
+    "senha": "1234"
+  },
+  {
+    "id": 0,
+    "nome": "eduardo",
+    "email": "teste@protonmail",
+    "fone": "491941924914",
+    "senha": "1234"
   }
 ]

@@ -1,86 +1,151 @@
 from models.clientes import Cliente
 from models.clientedao import ClienteDAO
-from models.convenio import Convenio
-from models.convenioDAO import ConvenioDAO
+from models.servico import Servico
+from models.servicodao import ServicoDAO
+from models.horario import Horario
+from models.horariodao import HorarioDAO
+from models.atendimento import Atendimento
+from models.atendimentoDAO import AtendimentoDAO
 from models.profissional import Profissional
-from models.profissionalDAO import Profissional
-
+from models.profissionalDAO import ProfissionalDAO
+from datetime import datetime
 class Service:
     @staticmethod
-    def cliente_inserir(id, nome, email, fone, senha):
-        obj = Cliente(id, nome, email, fone, senha)
+    def cliente_inserir(nome, email, fone, senha):
+        obj = Cliente(0, nome, email, fone, senha)
         ClienteDAO().inserir(obj)
-
     @staticmethod
     def cliente_listar():
-        return ClienteDAO().listar()
-
+        r = ClienteDAO().listar()
+        r.sort(key = lambda obj : obj.get_nome().casefold())
+        return r
     @staticmethod
     def cliente_listar_id(id):
         return ClienteDAO().listar_id(id)
-
     @staticmethod
     def cliente_atualizar(id, nome, email, fone, senha):
-        obj = Cliente(1, nome, email, fone, senha)
+        obj = Cliente(id, nome, email, fone, senha)
         ClienteDAO().atualizar(obj)
-
     @staticmethod
     def cliente_excluir(id):
         ClienteDAO().excluir(id)
-
-    @staticmethod
-    def cliente_listar_convenio(id_convenio):
-        return [cliente
-            for cliente in ClienteDAO().listar()
-            if cliente.get_id_convenio() == id_convenio
-        ]
     @staticmethod
     def cliente_criar_admin():
         for c in Service.cliente_listar():
             if c.get_email() == "admin": return
-        Service.cliente_inserir(1, "admin","admin","fone", 1234)
-    @staticmethod
+        Service.cliente_inserir("admin", "admin", "fone", "1234")        
     @staticmethod
     def cliente_autenticar(email, senha):
         for c in Service.cliente_listar():
-            print("EMAIL:", c.get_email())
-            print("SENHA:", c.get_senha())
-
-        if c.get_email() == email and c.get_senha() == senha:
-            return {
-                "id": c.get_id(),
-                "nome": c.get_nome()
-            }
-
+            if c.get_email() == email and c.get_senha() == senha:
+                return {"id": c.get_id(), "nome": c.get_nome()}
         return None
-    @staticmethod
-    def cliente_associar_ao_convenio(id, id_convenio):
-        cliente = ClienteDAO().listar_id(id)
-        if cliente is None:
-            raise ValueError("Cliente não encontrado")
-        if ConvenioDAO().listar_id(id_convenio) is None:
-            raise ValueError("Convênio não encontrado")
-        cliente.set_convenio(id_convenio)
-        ClienteDAO().atualizar(cliente)
+
 
     @staticmethod
-    def convenio_inserir(id, nome, contato, fone):
-        obj = Convenio(id, nome, contato, fone)
-        ConvenioDAO().inserir(obj)
+    def servico_inserir(descricao, valor):
+        obj = Servico(0, descricao, valor)
+        ServicoDAO().inserir(obj)
+    @staticmethod
+    def servico_listar():
+        r = ServicoDAO().listar()
+        r.sort(key = lambda obj : obj.get_descricao().casefold())
+        return r
+    @staticmethod
+    def servico_listar_id(id):
+        return ServicoDAO().listar_id(id)
+    @staticmethod
+    def servico_atualizar(id, descricao, valor):
+        obj = Servico(id, descricao, valor)
+        ServicoDAO().atualizar(obj)
+    @staticmethod
+    def servico_excluir(id):
+        ServicoDAO().excluir(id)
+
 
     @staticmethod
-    def convenio_listar():
-        return ConvenioDAO().listar()
+    def horario_inserir(data, confirmado, id_cliente, id_servico, id_profissional):
+        c = Horario(0, data)
+        c.set_confirmado(confirmado)
+        c.set_id_cliente(id_cliente)
+        c.set_id_servico(id_servico)
+        c.set_id_profissional(id_profissional)
+        HorarioDAO().inserir(c)
+    @staticmethod
+    def horario_listar():
+        r = HorarioDAO().listar()
+        r.sort(key = lambda obj : obj.get_data())
+        return r
+    @staticmethod
+    def horario_listar_id(id):
+        return HorarioDAO().listar_id(id)
+    @staticmethod
+    def horario_atualizar(id, data, confirmado, id_cliente, id_servico, id_profissional):
+        c = Horario(id, data)
+        c.set_confirmado(confirmado)
+        c.set_id_cliente(id_cliente)
+        c.set_id_servico(id_servico)
+        c.set_id_profissional(id_profissional)
+        HorarioDAO().atualizar(c)
+    @staticmethod
+    def horario_excluir(id):
+        HorarioDAO().excluir(id)
+    @staticmethod
+    def horario_filtrar_profissional(id_profissional):
+        r = []
+        for h in Service.horario_listar():
+            if h.get_id_profissional() == id_profissional:
+                r.append(h)
+            return r
+    @staticmethod
+    def horario_listar_disponiveis(id_profissional):
+        r = []
+        agora = datetime.now()
+        for h in Service.horario_listar():
+            if h.get_data() >= agora and h.get_confirmado() == False and h.get_id_cliente() == None and h.get_id_profissional() == id_profissional:
+                    r.append(h)
+        r.sort(key = lambda h : h.get_data())
+        return r
+    @staticmethod
+    def atendimento_inserir(data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario):
+        obj = Atendimento(0, data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario)
+        AtendimentoDAO().inserir(obj)
+    @staticmethod
+    def atendimento_listar():
+        return AtendimentoDAO().listar()
+    @staticmethod
+    def atendimento_listar_id(id):
+        return AtendimentoDAO().listar_id(id)
+    @staticmethod
+    def atendimento_atualizar(id, data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario):
+        obj = Atendimento(id, data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario)
+        AtendimentoDAO().atualizar(obj)
+    @staticmethod
+    def atendimento_excluir(id):
+        AtendimentoDAO().excluir(id)
 
     @staticmethod
-    def convenio_listar_id(id):
-        return ConvenioDAO().listar_id(id)
-
+    def profissional_inserir(nome, email, especialidade, senha):
+        obj = Profissional(0, nome, email, especialidade, senha)
+        ProfissionalDAO().inserir(obj)
     @staticmethod
-    def convenio_atualizar(id, nome, contato, fone):
-        obj = Convenio(id, nome, contato, fone)
-        ConvenioDAO().atualizar(obj)
-
+    def profissional_listar():
+        r = ProfissionalDAO().listar()
+        r.sort(key = lambda obj : obj.get_nome().casefold())
+        return r
     @staticmethod
-    def convenio_excluir(id):
-        ConvenioDAO().excluir(id)
+    def profissional_listar_id(id):
+        return ProfissionalDAO().listar_id(id)
+    @staticmethod
+    def profissional_atualizar(id, nome, email, especialidade, senha):
+        obj = Profissional(id, nome, email, especialidade, senha)
+        ProfissionalDAO().atualizar(obj)
+    @staticmethod
+    def profissional_excluir(id):
+        ProfissionalDAO().excluir(id)
+    @staticmethod
+    def profissional_autenticar(email, senha):
+        for c in Service.profissional_listar():
+            if c.get_email() == email and c.get_senha() == senha:
+                return {"id": c.get_id(), "nome": c.get_nome()}
+        return None

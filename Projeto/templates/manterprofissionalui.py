@@ -3,75 +3,60 @@ import pandas as pd
 import time
 from service import Service
 
-
-
-
-
 class ManterProfissionalUI:
     def main():
-        st.header("Cadrastro de Serviço")
-        tab1, tab2, tab3, tab4 = st.tabs(
-            ["Inserir", "Listar", "Atualizar", "Excluir"]
-        )
-        with tab1: ManterProfissionalUI.servico_inserir()
-        with tab2: ManterProfissionalUI.servico_listar()
-        with tab3: ManterProfissionalUI.servico_atualizar()
-        with tab4: ManterProfissionalUI.servico_excluir()
+        st.header("Cadastro de Profissionais")
+        tab1, tab2, tab3, tab4 = st.tabs(["Listar", "Inserir", "Atualizar", "Excluir"])
+        with tab1: ManterProfissionalUI.listar()
+        with tab2: ManterProfissionalUI.inserir()
+        with tab3: ManterProfissionalUI.atualizar()
+        with tab4: ManterProfissionalUI.excluir()
 
-    @staticmethod
-    def profissional_listar():
-        servico = Service.servico_listar()
-        if not servico:
-            st.write("Nenhum serviço cadastrado.")
-            return
+    def listar():
+        profissionais = Service.profissional_listar()
+        if len(profissionais) == 0: st.write("Nenhum profissional cadastrado")
+        else:
+            list_dic = []
+            for obj in profissionais: list_dic.append(obj.to_dict())
+            df = pd.DataFrame(list_dic)
+            st.dataframe(df)
 
-        df = pd.DataFrame([servico.to_json() for servico in servico])
-        st.dataframe(df, hide_index=True)
-
-    @staticmethod
-    def profissional_inserir():
-        st.header("Cadastro de Profissional")
-        id = st.number_input("Informe o id:", min_value=0, step=1)
-        nome = st.text_input("Informe o nome:")
-        email = st.text_input("Informe o e-mail:")
-        especialidade = st.text_input("Informe a especialide:" )
-        senha = st.text_input("Informe a senha:")
+    def inserir():
+        nome = st.text_input("Informe o nome")
+        email = st.text_input("Informe o e-mail")
+        especialidade = st.text_input("Informe a especialidade")
+        senha = st.text_input("Informe a senha", type="password")
         if st.button("Inserir"):
-            Service.servico_inserir(id, nome, email,especialidade,senha)
-            st.success("Profissional inserido com sucesso!")
-            st.write(f"Profissional inserido: {nome}")
+            Service.profissional_inserir(nome, email, especialidade, senha)
+            st.success("Profissional inserido com sucesso")
+            time.sleep(2)
+            st.rerun()
 
-    @staticmethod
-    def profissional_atualizar():
-        servicos = Service.servico_listar()
-        if not servicos:
-            st.write("Nenhum Profissional cadastrado.")
-            return
+    def atualizar():
+        profissionais = Service.profissional_listar()
+        if len(profissionais) == 0: st.write("Nenhum profissional cadastrado")
+        else:
+            op = st.selectbox("Atualização de Profissionais", profissionais)
+            nome = st.text_input("Informe o novo nome", op.get_nome())
+            email = st.text_input("Informe o novo email", op.get_email())
+            especialidade = st.text_input("Informe a nova especialidade", op.get_especialidade())
+            senha = st.text_input("Nova senha", op.get_senha(), type="password")
 
-        servico = st.selectbox(
-            "Atualização de Profissional",
-            servicos,
-            format_func=str,
-        )
-        nome = st.text_input("Novo nome", value=servico.get_nome())
-        email = st.text_input("Novo e-mail", value=servico.get_email())
-        especialidade = st.text_input("Nova especialidade", value=servico.get_especialidade())
-        if st.button("Atualizar"):
-            Service.convenio_atualizar(servico.get_id(), nome, email, especialidade)
-            st.success("Profissional atualizado com sucesso!")
+            if st.button("Atualizar"):
+                id = op.get_id()
+                Service.profissional_atualizar(id, nome, email, especialidade, senha)
+                st.success("Profissional atualizado com sucesso")
+                time.sleep(2)
+                st.rerun()
 
-    @staticmethod
-    def profissional_excluir():
-        servicos = Service.servico_listar()
-        if not servicos:
-            st.write("Nenhum Profissional cadastrado.")
-            return
-
-        servico = st.selectbox(
-            "Exclusão de Profissionais",
-            servicos,
-            format_func=str,
-        )
-        if st.button("Excluir"):
-            Service.servico_excluir(servico.get_id())
-            st.success("Profissional excluído com sucesso!")
+    def excluir():
+        profissionais = Service.profissional_listar()
+        if len(profissionais) == 0: st.write("Nenhum profissional cadastrado")
+        else:
+            op = st.selectbox("Exclusão de Profissionais", profissionais)
+            if st.button("Excluir"):
+                id = op.get_id()
+                Service.profissional_excluir(id)
+                st.success("Profissional excluído com sucesso")
+                time.sleep(2)
+                st.rerun()
