@@ -9,6 +9,8 @@ from models.atendimentoDAO import AtendimentoDAO
 from models.profissional import Profissional
 from models.profissionalDAO import ProfissionalDAO
 from datetime import datetime
+from datetime import timedelta
+
 class Service:
     @staticmethod
     def cliente_inserir(nome, email, fone, senha):
@@ -96,16 +98,27 @@ class Service:
         for h in Service.horario_listar():
             if h.get_id_profissional() == id_profissional:
                 r.append(h)
-            return r
+        return r
     @staticmethod
     def horario_listar_disponiveis(id_profissional):
         r = []
         agora = datetime.now()
         for h in Service.horario_listar():
             if h.get_data() >= agora and h.get_confirmado() == False and h.get_id_cliente() == None and h.get_id_profissional() == id_profissional:
-                    r.append(h)
+                r.append(h)
         r.sort(key = lambda h : h.get_data())
         return r
+    @staticmethod
+    def horario_abrir_minha_agenda(data,horario_inicio,intervalo,horario_fim,id_profissional):
+        data_inicio = datetime.strptime(data +" " + horario_inicio, "%d/%m/%Y %H:%M")
+
+        data_fim = datetime.strptime(data + " " + horario_fim, "%d/%m/%Y %H:%M")
+        delta = timedelta(minutes=intervalo)
+        x = data_inicio
+        while x <= data_fim:
+            Service.horario_inserir(x, False,None,None,id_profissional)
+            x = x + delta
+        
     @staticmethod
     def atendimento_inserir(data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario):
         obj = Atendimento(0, data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario)
