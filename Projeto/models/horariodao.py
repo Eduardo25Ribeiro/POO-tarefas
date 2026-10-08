@@ -5,7 +5,7 @@ from models.horario import Horario
 
 class HorarioDAO:
     def __init__(self):
-        self.__arquivo = "servicos.json"
+        self.__arquivo = "horarios.json"
         self.__objetos = []
         self.__abrir()
     

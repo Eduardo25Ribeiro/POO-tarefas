@@ -1,0 +1,18 @@
+[
+  {
+    "id": 0,
+    "data": "08/10/2026 17:09",
+    "confirmado": true,
+    "id_cliente": 1,
+    "id_servico": 0,
+    "id_profissional": null
+  },
+  {
+    "id": 0,
+    "data": "08/10/2026 17:18",
+    "confirmado": true,
+    "id_cliente": 0,
+    "id_servico": 0,
+    "id_profissional": 1
+  }
+]

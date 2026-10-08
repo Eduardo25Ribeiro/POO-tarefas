@@ -30,6 +30,7 @@ class Servico:
 
     def to_json(self):
         return {
+            
             "id": self.__id,
             "descricao": self.__descricao,
             "valor": self.__valor,
@@ -37,6 +38,7 @@ class Servico:
 
     @staticmethod
     def from_json(dic):
+        print(dic)
         return Servico(dic["id"], dic["descricao"], dic["valor"])
 
     def __str__(self):

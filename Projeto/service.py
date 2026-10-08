@@ -118,7 +118,16 @@ class Service:
         while x <= data_fim:
             Service.horario_inserir(x, False,None,None,id_profissional)
             x = x + delta
-        
+
+    @staticmethod
+    def horario_confirmar_servico(id_profissional):
+        r = []
+        for h in Service.horario_listar():
+            if h.get_confirmado() == False \
+            and h.get_id_cliente() != None and h.get_id_profissional() == id_profissional:
+                r.append(h)
+        r.sort (key = lambda h : h.get_data())
+        return r
     @staticmethod
     def atendimento_inserir(data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario):
         obj = Atendimento(0, data, queixa_principal, historico_saude, avaliacao, prescricao, id_horario)

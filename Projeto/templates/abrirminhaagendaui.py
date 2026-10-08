@@ -1,4 +1,3 @@
-
 import streamlit as st
 from service import Service
 import time
