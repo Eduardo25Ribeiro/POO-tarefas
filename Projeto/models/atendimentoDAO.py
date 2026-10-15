@@ -5,7 +5,7 @@ from models.atendimento import Atendimento
 
 class AtendimentoDAO:
     def __init__(self):
-        self.__arquivo = "servicos.json"
+        self.__arquivo = "atendimento.json"
         self.__objetos = []
         self.__abrir()
     
