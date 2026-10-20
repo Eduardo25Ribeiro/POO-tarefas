@@ -5,13 +5,18 @@ from models.atendimento import Atendimento
 
 class AtendimentoDAO:
     def __init__(self):
-        self.__arquivo = "servicos.json"
+        self.__arquivo = "atendimento.json"
         self.__objetos = []
         self.__abrir()
     
     def inserir(self, obj):
+        id = 0
+        for aux in self.__objetos:
+            if aux.get_id() > id: id = aux.get_id()
+        obj.set_id(id + 1)
         self.__objetos.append(obj)
         self.__salvar()
+        return obj.get_id()
 
     def listar(self):
         return self.__objetos
