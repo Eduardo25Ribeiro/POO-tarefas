@@ -5,7 +5,7 @@ from service import Service
 class VisualizarMinhaAgendaUI:
     def main():
         st.header("Minha Agenda")
-        horarios = Service.horario_visualizar_minha_agenda(st.session_state["usuario_id"])
+        horarios = Service.profissional_visualizar_agenda(st.session_state["usuario_id"])
         if len(horarios) == 0: st.write("Nenhum horário cadastrado")
         else:
             dic = []

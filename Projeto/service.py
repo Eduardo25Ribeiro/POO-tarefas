@@ -77,6 +77,16 @@ class Service:
         r.sort(key = lambda obj : obj.get_data())
         return r
     @staticmethod
+    def horario_listar_confirmados_hoje():
+        hoje = datetime.now().date()
+        r = []
+        for h in Service.horario_listar():
+            if (h.get_data().date() == hoje and h.get_confirmado()
+                    and h.get_id_cliente() not in [0, None]):
+                r.append(h)
+        r.sort(key = lambda h : h.get_data())
+        return r
+    @staticmethod
     def horario_listar_id(id):
         return HorarioDAO().listar_id(id)
     @staticmethod
@@ -90,16 +100,24 @@ class Service:
     @staticmethod
     def horario_excluir(id):
         HorarioDAO().excluir(id)
-
     @staticmethod
-    def horario_listar_disponiveis(id_profissional):
+    def horario_confirmar_servico(id_profissional):
+        r = []
+        for h in Service.horario_listar():
+            if h.get_confirmado() == False \
+            and h.get_id_cliente() != None and h.get_id_profissional() == id_profissional:
+                r.append(h)
+        r.sort (key = lambda h : h.get_data())
+        return r
+    @staticmethod
+    def retornar_horarios_disponiveis_hoje(id_profissional):
         r = []
         agora = datetime.now()
         for h in Service.horario_listar():
-            if h.get_data() >= agora and h.get_confirmado() == False and h.get_id_cliente() == None and h.get_id_profissional() == id_profissional: r.append(h)
+            if h.get_data().date() == agora.date() and h.get_confirmado() == False and h.get_id_cliente() == None and h.get_id_profissional() == id_profissional:
+                r.append(h)
         r.sort(key = lambda h : h.get_data())
         return r
-
     @staticmethod
     def abrir_agenda(data, horario_inicial, horario_final, intervalo, id_profissional):
         h_inicio, m_inicio = map(int, horario_inicial.split(":"))

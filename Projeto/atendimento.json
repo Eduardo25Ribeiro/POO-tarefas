@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": 1,
+    "data": "22/10/2026 00:00",
+    "queixa_principal": "teste",
+    "historico_saude": "t",
+    "avaliacao": "t",
+    "prescricao": "t",
+    "id_horario": 11,
+    "total": 0,
+    "pago": false
+  }
+]
