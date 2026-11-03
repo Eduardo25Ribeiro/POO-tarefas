@@ -17,7 +17,10 @@ from datetime import datetime, timedelta
 class Service:
     @staticmethod
     def cliente_inserir(nome, email, fone, senha):
-        
+        if email and Service.cliente_listar_id(email) is None:
+            for c in Service.cliente_listar():
+                if c.get_email() == email and c.get_email() == "admin":
+                    raise ValueError("Não é possivel ter 2 emails")
         obj = Cliente(0, nome, email, fone, senha)
         ClienteDAO().inserir(obj)
     @staticmethod
@@ -34,6 +37,9 @@ class Service:
         ClienteDAO().atualizar(obj)
     @staticmethod
     def cliente_excluir(id):
+        for obj in Service.horario_listar():
+            if obj.get_id_cliente() == id:
+                raise ValueError("Não é possível excluir o cliente, pois ele possui horários agendados.")
         ClienteDAO().excluir(id)
     @staticmethod
     def cliente_visualizar_servicos(id_cliente):
