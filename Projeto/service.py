@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 class Service:
     @staticmethod
     def cliente_inserir(nome, email, fone, senha):
+        
         obj = Cliente(0, nome, email, fone, senha)
         ClienteDAO().inserir(obj)
     @staticmethod
