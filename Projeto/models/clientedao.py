@@ -1,27 +1,25 @@
 import json
 from models.clientes import Cliente
+from models.dao import DAO
 
 
-
-class ClienteDAO:
+class ClienteDAO(DAO):
     def __init__(self):
-        self.__arquivo = "clientes.json"
-        self.__objetos = []
-        self.__abrir()
+        super().__init__("clientes.json")
 
     def inserir(self, obj):
-        id = 0
-        for aux in self.__objetos:
-            if aux.get_id() > id: id = aux.get_id()
-        obj.set_id(id + 1)
-        self.__objetos.append(obj)
-        self.__salvar()
+        proximo_id = max(
+            (cliente.get_id() for cliente in self._objetos),
+            default=0,
+        ) + 1
+        obj.set_id(proximo_id)
+        super().inserir(obj)
 
     def listar(self):
-        return self.__objetos
+        return self._objetos
 
     def listar_id(self, id):
-        for obj in self.__objetos:
+        for obj in self._objetos:
             if obj.get_id() == id:
                 return obj
         return None
@@ -29,24 +27,24 @@ class ClienteDAO:
     def atualizar(self, obj):
         aux = self.listar_id(obj.get_id())
         if aux is not None:
-            self.__objetos.remove(aux)
-            self.__objetos.append(obj)
-            self.__salvar()
+            self._objetos.remove(aux)
+            self._objetos.append(obj)
+            self._salvar()
 
     def excluir(self, id):
         aux = self.listar_id(id)
         if aux is not None:
-            self.__objetos.remove(aux)
-            self.__salvar()
+            self._objetos.remove(aux)
+            self._salvar()
 
-    def __abrir(self):
+    def _abrir(self):
         try:
-            with open(self.__arquivo, mode="r") as arquivo:
+            with open(self._arquivo, mode="r") as arquivo:
                 list_dic = json.load(arquivo)
-                self.__objetos = [Cliente.from_json(dic) for dic in list_dic]
+                self._objetos = [Cliente.from_json(dic) for dic in list_dic]
         except FileNotFoundError:
-            self.__objetos = []
+            self._objetos = []
 
-    def __salvar(self):
-        with open(self.__arquivo, mode="w") as arquivo:
-            json.dump([obj.to_json() for obj in self.__objetos], arquivo, indent=2)
+    def _salvar(self):
+        with open(self._arquivo, mode="w") as arquivo:
+            json.dump([obj.to_json() for obj in self._objetos], arquivo, indent=2)
