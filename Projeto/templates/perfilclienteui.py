@@ -14,8 +14,9 @@ class PerfilClienteUI:
             try:
                 id = op.get_id()
                 Service.cliente_atualizar(id, nome, email, fone, senha)
-                st.success("Cliente atualizado com sucesso")
             except ValueError as erro:
                 st.error(f"Erro ao atualizar cliente: {erro}")
-            time.sleep(2)
-            st.rerun()
+            else:
+                st.success("Cliente atualizado com sucesso")
+                time.sleep(2)
+                st.rerun()

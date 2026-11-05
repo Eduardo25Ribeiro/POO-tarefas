@@ -13,9 +13,9 @@ class AbrirContaUI:
         if st.button("Inserir"):
             try:
                 Service.cliente_inserir(nome, email, fone, senha)
-                st.success("Conta criada com sucesso")
-                
             except ValueError as erro:
                 st.error(f"Erro ao criar conta: {erro}")
-            time.sleep(2)
-            st.rerun()
+            else:
+                st.success("Conta criada com sucesso")
+                time.sleep(2)
+                st.rerun()

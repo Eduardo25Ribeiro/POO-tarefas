@@ -17,10 +17,7 @@ from datetime import datetime, timedelta
 class Service:
     @staticmethod
     def cliente_inserir(nome, email, fone, senha):
-        if email and Service.cliente_listar_id(email) is None:
-            for c in Service.cliente_listar():
-                if c.get_email() == email and c.get_email() == "admin":
-                    raise ValueError("Não é possivel ter 2 emails")
+        Service.__validar_email_cliente(email)
         obj = Cliente(0, nome, email, fone, senha)
         ClienteDAO().inserir(obj)
     @staticmethod
@@ -33,8 +30,22 @@ class Service:
         return ClienteDAO().listar_id(id)
     @staticmethod
     def cliente_atualizar(id, nome, email, fone, senha):
+        cliente_atual = Service.cliente_listar_id(id)
+        Service.__validar_email_cliente(email, cliente_atual)
         obj = Cliente(id, nome, email, fone, senha)
         ClienteDAO().atualizar(obj)
+
+    @staticmethod
+    def __validar_email_cliente(email, cliente_atual=None):
+        if email.casefold() == "admin":
+            raise ValueError("O e-mail admin é reservado")
+        for cliente in Service.cliente_listar():
+            if (cliente_atual is None or cliente.get_id() != cliente_atual.get_id()) \
+            and cliente.get_email().casefold() == email.casefold():
+                raise ValueError("Já existe uma pessoa cadastrada com este e-mail")
+        for profissional in Service.profissional_listar():
+            if profissional.get_email().casefold() == email.casefold():
+                raise ValueError("Já existe uma pessoa cadastrada com este e-mail")
     @staticmethod
     def cliente_excluir(id):
         for obj in Service.horario_listar():
@@ -170,16 +181,9 @@ class Service:
         return r
     @staticmethod
     def abrir_agenda(data, horario_inicial, horario_final, intervalo, id_profissional):
-        h_inicio, m_inicio = map(int, horario_inicial.split(":"))
-        h_final, m_final = map(int, horario_final.split(":"))
-        inicial = timedelta(hours=h_inicio, minutes=m_inicio)
-        final = timedelta(hours=h_final, minutes=m_final)
-        inter = timedelta(minutes=int(intervalo))
-        data = datetime.strptime(data, "%d/%m/%Y")
-        while inicial <= final:
-            data_datetime = data + inicial
-            Service.horario_inserir(data_datetime, False, None, None, id_profissional)
-            inicial += inter
+        Service.horario_abrir_minha_agenda(
+            data, horario_inicial, int(intervalo), horario_final, id_profissional
+        )
 
     @staticmethod
     def profissional_inserir(nome, email, especialidade, senha):
@@ -317,7 +321,8 @@ class Service:
     def cliente_criar_admin():
         for c in Service.cliente_listar():
             if c.get_email() == "admin": return
-        Service.cliente_inserir("admin", "admin", "fone", "1234")
+        obj = Cliente(0, "admin", "admin", "fone", "1234")
+        ClienteDAO().inserir(obj)
 
     @staticmethod
     def cliente_autenticar(email, senha):

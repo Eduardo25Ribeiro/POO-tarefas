@@ -27,11 +27,12 @@ class ManterClienteUI:
         if st.button("Inserir"):
             try:
                 Service.cliente_inserir(nome, email, fone, senha)
-                st.success("Cliente inserido com sucesso")
             except ValueError as erro:
                 st.error(f"Erro ao inserir cliente: {erro}")
-            time.sleep(2)
-            st.rerun()
+            else:
+                st.success("Cliente inserido com sucesso")
+                time.sleep(2)
+                st.rerun()
     def atualizar():
         clientes = Service.cliente_listar()
         if len(clientes) == 0: st.write("Nenhum cliente cadastrado")
@@ -46,12 +47,12 @@ class ManterClienteUI:
                 try:
                     id = op.get_id()
                     Service.cliente_atualizar(id, nome, email, fone, senha)
-                    st.success("Cliente atualizado com sucesso")
-                    
                 except ValueError as erro:
                     st.error(f"Erro ao atualizar cliente: {erro}")
-                time.sleep(2)
-                st.rerun()
+                else:
+                    st.success("Cliente atualizado com sucesso")
+                    time.sleep(2)
+                    st.rerun()
     def excluir():
         clientes = Service.cliente_listar()
         if len(clientes) == 0: st.write("Nenhum cliente cadastrado")
@@ -61,11 +62,11 @@ class ManterClienteUI:
                 try:
                     id = op.get_id()
                     Service.cliente_excluir(id)
-                    st.success("Cliente excluído com sucesso")
-                    
                 except ValueError as erro:
                     st.error(f"Erro ao excluir cliente: {erro}")
-                time.sleep(2)
-                st.rerun()
+                else:
+                    st.success("Cliente excluído com sucesso")
+                    time.sleep(2)
+                    st.rerun()
 
     
