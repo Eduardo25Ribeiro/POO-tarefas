@@ -21,7 +21,9 @@ class Horario:
     def get_id_profissional(self): return self.__id_profissional
 
     def set_id(self, id): self.__id = id
-    def set_data(self, data): self.__data = data
+    def set_data(self, data):
+        if data.year < 2025: raise ValueError("A data do horário deve ser a partir de 2025")
+        self.__data = data
     def set_confirmado(self, confirmado): self.__confirmado = confirmado
     def set_id_cliente(self, id_cliente): self.__id_cliente = id_cliente
     def set_id_servico(self, id_servico): self.__id_servico = id_servico
