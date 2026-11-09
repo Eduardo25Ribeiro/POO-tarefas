@@ -1,45 +1,16 @@
 import json
 from models.horario import Horario
+from models.dao import DAO
 
 
 
-class HorarioDAO:
+class HorarioDAO(DAO):
     def __init__(self):
-        self.__arquivo = "horarios.json"
-        self.__objetos = []
-        self.__abrir()
+        super().__init__("horarios.json")
+
     
-    def inserir(self, obj):
-        id = 0
-        for aux in self.__objetos:
-            if aux.get_id() > id: id = aux.get_id()
-        obj.set_id(id + 1)
-        self.__objetos.append(obj)
-        self.__salvar()
-
-    def listar(self):
-        return self.__objetos
-
-    def listar_id(self, id):
-        for obj in self.__objetos:
-            if obj.get_id() == id:
-                return obj
-        return None
-
-    def atualizar(self, obj):
-        aux = self.listar_id(obj.get_id())
-        if aux is not None:
-            self.__objetos.remove(aux)
-            self.__objetos.append(obj)
-            self.__salvar()
-
-    def excluir(self, id):
-        aux = self.listar_id(id)
-        if aux is not None:
-            self.__objetos.remove(aux)
-            self.__salvar()
-
-    def __abrir(self):
+    
+    def _abrir(self):
         try:
             with open(self.__arquivo, mode="r") as arquivo:
                 list_dic = json.load(arquivo)
@@ -47,6 +18,6 @@ class HorarioDAO:
         except FileNotFoundError:
             self.__objetos = []
 
-    def __salvar(self):
+    def _salvar(self):
         with open(self.__arquivo, mode="w") as arquivo:
             json.dump([obj.to_json() for obj in self.__objetos], arquivo, indent=2)
