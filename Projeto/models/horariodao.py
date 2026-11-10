@@ -12,12 +12,12 @@ class HorarioDAO(DAO):
     
     def _abrir(self):
         try:
-            with open(self.__arquivo, mode="r") as arquivo:
+            with open(self._arquivo, mode="r") as arquivo:
                 list_dic = json.load(arquivo)
-                self.__objetos = [Horario.from_json(dic) for dic in list_dic]
+                self._objetos = [Horario.from_json(dic) for dic in list_dic]
         except FileNotFoundError:
-            self.__objetos = []
+            self._objetos = []
 
     def _salvar(self):
-        with open(self.__arquivo, mode="w") as arquivo:
-            json.dump([obj.to_json() for obj in self.__objetos], arquivo, indent=2)
+        with open(self._arquivo, mode="w") as arquivo:
+            json.dump([obj.to_json() for obj in self._objetos], arquivo, indent=2)
