@@ -1,6 +1,6 @@
 from models.profissional import Profissional
 import json
-from models.dao import DAO
+from dao_json.dao import DAO
 class ProfissionalDAO(DAO):
     def __init__(self):
         super().__init__("profissionais.json")

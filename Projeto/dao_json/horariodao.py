@@ -1,6 +1,6 @@
 import json
 from models.horario import Horario
-from models.dao import DAO
+from dao_json.dao import DAO
 
 
 
