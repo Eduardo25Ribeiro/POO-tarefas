@@ -3,48 +3,53 @@ from models.clientes import Cliente
 
 
 class ClienteDAO(DAO):
-    @classmethod
-    def inserir(cls, obj):
-        cls.abrir()
-        sql = """
-            INSERT INTO cliente (nome, email, fone, senha)
-            VALUES (?, ?, ?, ?)
-        """
-        cls.execute(sql, (obj.get_nome(), obj.get_email(), obj.get_fone(),
-                          obj.get_senha()))
-        cls.fechar()
-    @classmethod
-    def listar(cls):
-        cls.abrir()
-        sql = "SELECT * FROM cliente"
-        cursor = cls.execute(sql)
-        rows = cursor.fetchall()
-        objs = [Cliente(id, nome, email, fone, senha) for (id, nome, email, fone,
-                senha) in rows]
-        cls.fechar()
-        return objs
-    @classmethod
-    def listar_id(cls, id):
-        cls.abrir()
-        sql = "SELECT * FROM cliente WHERE id = ?"
-        cursor = cls.execute(sql, (id,))
-        row = cursor.fetchone()
-        obj = Cliente(*row) if row else None
-        cls.fechar()
-        return obj
-    @classmethod
-    def atualizar(cls, obj):
-        cls.abrir()
-        sql = """
-            UPDATE cliente SET nome=?, email=?, fone=?, senha=?
-            WHERE id=?
-        """
-        cls.execute(sql, (obj.get_nome(), obj.get_email(), obj.get_fone(),
-                          obj.get_senha(), obj.get_id()))
-        cls.fechar()
-    @classmethod
-    def excluir(cls, obj):
-        cls.abrir()
-        sql = "DELETE FROM cliente WHERE id=?"
-        cls.execute(sql, (obj,))
-        cls.fechar()
+    def inserir(self, obj):
+        self.abrir()
+        try:
+            sql = """
+                INSERT INTO cliente (nome, email, fone, senha)
+                VALUES (?, ?, ?, ?)
+            """
+            cursor = self.execute(sql, (obj.get_nome(), obj.get_email(), obj.get_fone(),
+                                        obj.get_senha()))
+            obj.set_id(cursor.lastrowid)
+        finally:
+            self.fechar()
+
+    def listar(self):
+        self.abrir()
+        try:
+            sql = "SELECT * FROM cliente"
+            rows = self.execute(sql).fetchall()
+            return [Cliente(*row) for row in rows]
+        finally:
+            self.fechar()
+
+    def listar_id(self, id):
+        self.abrir()
+        try:
+            sql = "SELECT * FROM cliente WHERE id = ?"
+            row = self.execute(sql, (id,)).fetchone()
+            return Cliente(*row) if row else None
+        finally:
+            self.fechar()
+
+    def atualizar(self, obj):
+        self.abrir()
+        try:
+            sql = """
+                UPDATE cliente SET nome=?, email=?, fone=?, senha=?
+                WHERE id=?
+            """
+            self.execute(sql, (obj.get_nome(), obj.get_email(), obj.get_fone(),
+                               obj.get_senha(), obj.get_id()))
+        finally:
+            self.fechar()
+
+    def excluir(self, id):
+        self.abrir()
+        try:
+            sql = "DELETE FROM cliente WHERE id=?"
+            self.execute(sql, (id,))
+        finally:
+            self.fechar()

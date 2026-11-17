@@ -79,9 +79,23 @@ class Database:
                 avaliacao TEXT NULL,
                 prescricao TEXT NULL,
                 id_horario INTEGER,
+                total REAL NOT NULL DEFAULT 0,
+                pago INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (id_horario) REFERENCES horario(id) ON DELETE CASCADE
             );
         """)
+
+        atendimento_columns = {
+            row[1] for row in cls.execute("PRAGMA table_info(atendimento)").fetchall()
+        }
+        if "total" not in atendimento_columns:
+            cls.execute(
+                "ALTER TABLE atendimento ADD COLUMN total REAL NOT NULL DEFAULT 0"
+            )
+        if "pago" not in atendimento_columns:
+            cls.execute(
+                "ALTER TABLE atendimento ADD COLUMN pago INTEGER NOT NULL DEFAULT 0"
+            )
 
 
 if __name__ == "__main__":

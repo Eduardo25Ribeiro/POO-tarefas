@@ -14,6 +14,7 @@ from templates.visualizarminhaagendaui import VisualizarMinhaAgendaUI
 from templates.confirmarservicoui import ConfirmarServicoUI
 from templates.ListarHorariosConfirmadosHojeUI import ListarHorariosConfirmadosHojeUI
 from templates.ListarAgendaProfissionalUI import ListarAgendaProfissionalUI
+from dao_sql.database import Database
 from service import Service
 import streamlit as st
 
@@ -70,5 +71,11 @@ class IndexUI:
         Service.cliente_criar_admin()
         # monta o sidebar
         IndexUI.sidebar()
+
+Database.abrir()
+try:
+    Database.criar_tabelas()
+finally:
+    Database.fechar()
 
 IndexUI.main()

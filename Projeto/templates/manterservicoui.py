@@ -47,7 +47,7 @@ class ManterServicoUI:
             format_func=str,
         )
         descricao = st.text_input("Nova descrição", value=servico.get_descricao())
-        valor = st.number_input("Novo valor", min_value=0, value=servico.get_valor(), step=1)
+        valor = st.number_input("Novo valor", min_value=0.0, value=float(servico.get_valor()), step=0.01)
         if st.button("Atualizar"):
             Service.servico_atualizar(servico.get_id(), descricao, valor)
             st.success("Serviço atualizado com sucesso!")

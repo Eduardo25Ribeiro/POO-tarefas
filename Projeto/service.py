@@ -1,13 +1,13 @@
 from models.clientes import Cliente         # entidade
-from dao_json.clientedao import ClienteDAO   # persistência
+from dao_sql.clientedao import ClienteDAO   # persistência
 from models.servico import Servico
-from dao_json.servicodao import ServicoDAO
+from dao_sql.servicodao import ServicoDAO
 from models.horario import Horario
-from dao_json.horariodao import HorarioDAO
+from dao_sql.horariodao import HorarioDAO
 from models.profissional import Profissional
-from dao_json.profissionalDAO import ProfissionalDAO
+from dao_sql.profissionaldao import ProfissionalDAO
 from models.atendimento import Atendimento
-from dao_json.atendimentoDAO import AtendimentoDAO
+from dao_sql.atendimentodao import AtendimentoDAO
 from models.atendimentoitens import AtendimentoItens
 from models.atendimentoitensdao import AtendimentoItensDAO
 from models.pagamento import Pagamento

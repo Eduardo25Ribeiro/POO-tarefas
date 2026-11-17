@@ -1,58 +1,54 @@
 from models.servico import Servico
-from dao_json.dao import DAO
+from dao_sql.dao import DAO
 
 class ServicoDAO(DAO):
-    @classmethod
-    def inserir(cls, obj):
-        cls.abrir()
+    def inserir(self, obj):
+        self.abrir()
         try:
             sql = """
-                INSERT INTO servico (nome, descricao, valor)
-                VALUES (?, ?, ?)
+                INSERT INTO servico (descricao, valor)
+                VALUES (?, ?)
             """
-            cls.execute(sql, (obj.get_nome(), obj.get_descricao(), obj.get_valor()))
+            cursor = self.execute(sql, (obj.get_descricao(), obj.get_valor()))
+            obj.set_id(cursor.lastrowid)
         finally:
-            cls.fechar()
+            self.fechar()
 
-    @classmethod
-    def listar(cls):
-        cls.abrir()
+    def listar(self):
+        self.abrir()
         try:
             sql = "SELECT * FROM servico"
-            cursor = cls.execute(sql)
+            cursor = self.execute(sql)
             rows = cursor.fetchall()
-            return [Servico(id, nome, descricao, valor) for (id, nome, descricao, valor) in rows]
+            return [Servico(*row) for row in rows]
         finally:
-            cls.fechar()
+            self.fechar()
 
-    @classmethod
-    def listar_id(cls, id):
-        cls.abrir()
+    def listar_id(self, id):
+        self.abrir()
         try:
             sql = "SELECT * FROM servico WHERE id = ?"
-            cursor = cls.execute(sql, (id,))
+            cursor = self.execute(sql, (id,))
             row = cursor.fetchone()
             return Servico(*row) if row else None
         finally:
-            cls.fechar()
+            self.fechar()
 
-    @classmethod
-    def atualizar(cls, obj):
-        cls.abrir()
+    def atualizar(self, obj):
+        self.abrir()
         try:
             sql = """
-                UPDATE servico SET nome=?, descricao=?, valor=?
+                UPDATE servico SET descricao=?, valor=?
                 WHERE id=?
             """
-            cls.execute(sql, (obj.get_nome(), obj.get_descricao(), obj.get_valor(), obj.get_id()))
+            self.execute(sql, (obj.get_descricao(), obj.get_valor(), obj.get_id()))
         finally:
-            cls.fechar()
+            self.fechar()
 
-    @classmethod
-    def excluir(cls, obj):
-        cls.abrir()
+    def excluir(self, id):
+        self.abrir()
         try:
             sql = "DELETE FROM servico WHERE id=?"
-            cls.execute(sql, (obj.get_id(),))
+            self.execute(sql, (id,))
         finally:
-            cls.fechar()
+            self.fechar()
